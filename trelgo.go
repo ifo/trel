@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"net/url"
+	"strings"
 )
 
 const API_PREFIX = "https://api.trello.com/1/"
@@ -87,6 +89,21 @@ func (b Board) Lists() ([]List, error) {
 	return out, nil
 }
 
+func (b Board) NewList(name, position string) (List, error) {
+	c := b.client
+	if position == "" {
+		position = "bottom"
+	}
+	name, position = url.QueryEscape(name), url.QueryEscape(position)
+	apiurl := API_PREFIX + fmt.Sprintf("boards/%s/lists?name=%s&pos=%s&key=%s&token=%s", b.ID, name, position, c.APIKey, c.Token)
+	var out List
+	if err := postAndParseBody(apiurl, &out); err != nil {
+		return List{}, err
+	}
+	out.client = c
+	return out, nil
+}
+
 func (c *Client) List(id string) (List, error) {
 	apiurl := API_PREFIX + fmt.Sprintf("lists/%s?key=%s&token=%s", id, c.APIKey, c.Token)
 	var out List
@@ -115,6 +132,21 @@ func (l List) Cards() ([]Card, error) {
 // t must be a pointer
 func getAndParseBody(apiurl string, t interface{}) error {
 	resp, err := http.Get(apiurl)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return err
+	}
+
+	return json.Unmarshal(body, t)
+}
+
+func postAndParseBody(apiurl string, t interface{}) error {
+	resp, err := http.Post(apiurl, "", strings.NewReader(""))
 	if err != nil {
 		return err
 	}
