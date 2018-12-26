@@ -52,9 +52,9 @@ func New(username, apiKey, token string) *Client {
 }
 
 func (c *Client) Boards() ([]Board, error) {
-	url := API_PREFIX + fmt.Sprintf("members/%s/boards?key=%s&token=%s", c.Username, c.APIKey, c.Token)
+	apiurl := API_PREFIX + fmt.Sprintf("members/%s/boards?key=%s&token=%s", c.Username, c.APIKey, c.Token)
 	var out []Board
-	if err := getAndParseBody(url, &out); err != nil {
+	if err := getAndParseBody(apiurl, &out); err != nil {
 		return nil, err
 	}
 	for i := range out {
@@ -64,9 +64,9 @@ func (c *Client) Boards() ([]Board, error) {
 }
 
 func (c *Client) Board(id string) (Board, error) {
-	url := API_PREFIX + fmt.Sprintf("boards/%s?key=%s&token=%s", id, c.APIKey, c.Token)
+	apiurl := API_PREFIX + fmt.Sprintf("boards/%s?key=%s&token=%s", id, c.APIKey, c.Token)
 	var out Board
-	if err := getAndParseBody(url, &out); err != nil {
+	if err := getAndParseBody(apiurl, &out); err != nil {
 		return Board{}, err
 	}
 	out.client = c
@@ -75,9 +75,9 @@ func (c *Client) Board(id string) (Board, error) {
 
 func (b Board) Lists() ([]List, error) {
 	c := b.client
-	url := API_PREFIX + fmt.Sprintf("boards/%s/lists?key=%s&token=%s", b.ID, c.APIKey, c.Token)
+	apiurl := API_PREFIX + fmt.Sprintf("boards/%s/lists?key=%s&token=%s", b.ID, c.APIKey, c.Token)
 	var out []List
-	if err := getAndParseBody(url, &out); err != nil {
+	if err := getAndParseBody(apiurl, &out); err != nil {
 		return nil, err
 	}
 	for i := range out {
@@ -88,9 +88,9 @@ func (b Board) Lists() ([]List, error) {
 }
 
 func (c *Client) List(id string) (List, error) {
-	url := API_PREFIX + fmt.Sprintf("lists/%s?key=%s&token=%s", id, c.APIKey, c.Token)
+	apiurl := API_PREFIX + fmt.Sprintf("lists/%s?key=%s&token=%s", id, c.APIKey, c.Token)
 	var out List
-	if err := getAndParseBody(url, &out); err != nil {
+	if err := getAndParseBody(apiurl, &out); err != nil {
 		return List{}, err
 	}
 	out.client = c
@@ -99,9 +99,9 @@ func (c *Client) List(id string) (List, error) {
 
 func (l List) Cards() ([]Card, error) {
 	c := l.client
-	url := API_PREFIX + fmt.Sprintf("lists/%s/cards?key=%s&token=%s", l.ID, c.APIKey, c.Token)
+	apiurl := API_PREFIX + fmt.Sprintf("lists/%s/cards?key=%s&token=%s", l.ID, c.APIKey, c.Token)
 	var out []Card
-	if err := getAndParseBody(url, &out); err != nil {
+	if err := getAndParseBody(apiurl, &out); err != nil {
 		return nil, err
 	}
 	for i := range out {
@@ -113,8 +113,8 @@ func (l List) Cards() ([]Card, error) {
 }
 
 // t must be a pointer
-func getAndParseBody(url string, t interface{}) error {
-	resp, err := http.Get(url)
+func getAndParseBody(apiurl string, t interface{}) error {
+	resp, err := http.Get(apiurl)
 	if err != nil {
 		return err
 	}
