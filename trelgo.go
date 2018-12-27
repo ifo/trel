@@ -6,7 +6,6 @@ import (
 	"io/ioutil"
 	"net/http"
 	"net/url"
-	"strings"
 )
 
 const API_PREFIX = "https://api.trello.com/1/"
@@ -56,7 +55,7 @@ func New(username, apiKey, token string) *Client {
 func (c *Client) Boards() ([]Board, error) {
 	apiurl := API_PREFIX + fmt.Sprintf("members/%s/boards?key=%s&token=%s", c.Username, c.APIKey, c.Token)
 	var out []Board
-	if err := getAndParseBody(apiurl, &out); err != nil {
+	if err := doMethodAndParseBody(http.MethodGet, apiurl, &out); err != nil {
 		return nil, err
 	}
 	for i := range out {
@@ -68,7 +67,7 @@ func (c *Client) Boards() ([]Board, error) {
 func (c *Client) Board(id string) (Board, error) {
 	apiurl := API_PREFIX + fmt.Sprintf("boards/%s?key=%s&token=%s", id, c.APIKey, c.Token)
 	var out Board
-	if err := getAndParseBody(apiurl, &out); err != nil {
+	if err := doMethodAndParseBody(http.MethodGet, apiurl, &out); err != nil {
 		return Board{}, err
 	}
 	out.client = c
@@ -79,7 +78,7 @@ func (b Board) Lists() ([]List, error) {
 	c := b.client
 	apiurl := API_PREFIX + fmt.Sprintf("boards/%s/lists?key=%s&token=%s", b.ID, c.APIKey, c.Token)
 	var out []List
-	if err := getAndParseBody(apiurl, &out); err != nil {
+	if err := doMethodAndParseBody(http.MethodGet, apiurl, &out); err != nil {
 		return nil, err
 	}
 	for i := range out {
@@ -97,7 +96,7 @@ func (b Board) NewList(name, position string) (List, error) {
 	name, position = url.QueryEscape(name), url.QueryEscape(position)
 	apiurl := API_PREFIX + fmt.Sprintf("boards/%s/lists?name=%s&pos=%s&key=%s&token=%s", b.ID, name, position, c.APIKey, c.Token)
 	var out List
-	if err := postAndParseBody(apiurl, &out); err != nil {
+	if err := doMethodAndParseBody(http.MethodPost, apiurl, &out); err != nil {
 		return List{}, err
 	}
 	out.client = c
@@ -107,7 +106,7 @@ func (b Board) NewList(name, position string) (List, error) {
 func (c *Client) List(id string) (List, error) {
 	apiurl := API_PREFIX + fmt.Sprintf("lists/%s?key=%s&token=%s", id, c.APIKey, c.Token)
 	var out List
-	if err := getAndParseBody(apiurl, &out); err != nil {
+	if err := doMethodAndParseBody(http.MethodGet, apiurl, &out); err != nil {
 		return List{}, err
 	}
 	out.client = c
@@ -118,7 +117,7 @@ func (l List) Cards() ([]Card, error) {
 	c := l.client
 	apiurl := API_PREFIX + fmt.Sprintf("lists/%s/cards?key=%s&token=%s", l.ID, c.APIKey, c.Token)
 	var out []Card
-	if err := getAndParseBody(apiurl, &out); err != nil {
+	if err := doMethodAndParseBody(http.MethodGet, apiurl, &out); err != nil {
 		return nil, err
 	}
 	for i := range out {
@@ -135,7 +134,7 @@ func (l List) NewCard(name, desc, position string) (Card, error) {
 	query := fmt.Sprintf("idList=%s&name=%s&desc=%s&pos=%s&key=%s&token=%s", l.ID, name, desc, position, c.APIKey, c.Token)
 	apiurl := API_PREFIX + "cards?" + query
 	var out Card
-	if err := postAndParseBody(apiurl, &out); err != nil {
+	if err := doMethodAndParseBody(http.MethodPost, apiurl, &out); err != nil {
 		return Card{}, err
 	}
 	out.Board = l.Board
@@ -145,28 +144,20 @@ func (l List) NewCard(name, desc, position string) (Card, error) {
 }
 
 // t must be a pointer
-func getAndParseBody(apiurl string, t interface{}) error {
-	resp, err := http.Get(apiurl)
+func doMethodAndParseBody(method, apiurl string, t interface{}) error {
+	req, err := http.NewRequest(method, apiurl, nil)
+	if err != nil {
+		return err
+	}
+
+	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
 		return err
 	}
 	defer resp.Body.Close()
-
-	body, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return err
+	if resp.StatusCode >= 400 {
+		return fmt.Errorf("HTTP Request error, status: %d", resp.StatusCode)
 	}
-
-	return json.Unmarshal(body, t)
-}
-
-// t must be a pointer
-func postAndParseBody(apiurl string, t interface{}) error {
-	resp, err := http.Post(apiurl, "", strings.NewReader(""))
-	if err != nil {
-		return err
-	}
-	defer resp.Body.Close()
 
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
