@@ -129,6 +129,21 @@ func (l List) Cards() ([]Card, error) {
 	return out, nil
 }
 
+func (l List) NewCard(name, desc, position string) (Card, error) {
+	c := l.client
+	name, desc, position = url.QueryEscape(name), url.QueryEscape(desc), url.QueryEscape(position)
+	query := fmt.Sprintf("idList=%s&name=%s&desc=%s&pos=%s&key=%s&token=%s", l.ID, name, desc, position, c.APIKey, c.Token)
+	apiurl := API_PREFIX + "cards?" + query
+	var out Card
+	if err := postAndParseBody(apiurl, &out); err != nil {
+		return Card{}, err
+	}
+	out.Board = l.Board
+	out.List = l
+	out.client = c
+	return out, nil
+}
+
 // t must be a pointer
 func getAndParseBody(apiurl string, t interface{}) error {
 	resp, err := http.Get(apiurl)
@@ -145,6 +160,7 @@ func getAndParseBody(apiurl string, t interface{}) error {
 	return json.Unmarshal(body, t)
 }
 
+// t must be a pointer
 func postAndParseBody(apiurl string, t interface{}) error {
 	resp, err := http.Post(apiurl, "", strings.NewReader(""))
 	if err != nil {
