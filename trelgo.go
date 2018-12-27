@@ -103,6 +103,7 @@ func (b Board) NewList(name, position string) (List, error) {
 	if position == "" {
 		position = "bottom"
 	}
+	// TODO: Handle query arguments and escaping better, probably use url.URL.
 	name, position = url.QueryEscape(name), url.QueryEscape(position)
 	apiurl := API_PREFIX + fmt.Sprintf("boards/%s/lists?name=%s&pos=%s&key=%s&token=%s", b.ID, name, position, c.APIKey, c.Token)
 	var out List
@@ -153,15 +154,15 @@ func (l List) NewCard(name, desc, position string) (Card, error) {
 	return out, nil
 }
 
-func (c *Card) Move(listID string) error {
-	cl := c.client
-	apiurl := API_PREFIX + fmt.Sprintf("cards/%s?idList=%s&key=%s&token=%s", c.ID, listID, cl.APIKey, cl.Token)
+func (ca *Card) Move(listID string) error {
+	c := ca.client
+	apiurl := API_PREFIX + fmt.Sprintf("cards/%s?idList=%s&key=%s&token=%s", ca.ID, listID, c.APIKey, c.Token)
 	if err := doMethod(http.MethodPut, apiurl); err != nil {
 		return err
 	}
 	// TODO: Eventually handle List and ListID mismatch in a better way.
-	c.IDList = listID
-	c.List.ID = listID
+	ca.IDList = listID
+	ca.List.ID = listID
 	return nil
 }
 
@@ -182,7 +183,7 @@ func doMethod(method, apiurl string) error {
 	return nil
 }
 
-// t must be a pointer
+// t must be a pointer.
 func doMethodAndParseBody(method, apiurl string, t interface{}) error {
 	req, err := http.NewRequest(method, apiurl, nil)
 	if err != nil {
