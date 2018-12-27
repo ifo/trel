@@ -44,6 +44,26 @@ type Card struct {
 	client       *Client
 }
 
+type Checklist struct {
+	ID         string      `json:"id"`
+	Name       string      `json:"name"`
+	IDBoard    string      `json:"idBoard"`
+	IDCard     string      `json:"idCard"`
+	CheckItems []CheckItem `json:"checkItems"`
+	Card       Card
+	Board      Board
+	client     *Client
+}
+
+type CheckItem struct {
+	ID          string `json:"id"`
+	Name        string `json:"name"`
+	State       string `json:"state"` // TODO: Turn this into a boolean type and add custom json parsing.
+	IDChecklist string `json:"idChecklist"`
+	Checklist   Checklist
+	client      *Client
+}
+
 func New(username, apiKey, token string) *Client {
 	return &Client{
 		Username: username,
@@ -81,6 +101,20 @@ func (c *Client) Card(id string) (Card, error) {
 		return Card{}, err
 	}
 	out.client = c
+	return out, nil
+}
+
+func (c *Client) Checklist(id string) (Checklist, error) {
+	apiurl := API_PREFIX + fmt.Sprintf("checklists/%s?key=%s&token=%s", id, c.APIKey, c.Token)
+	var out Checklist
+	if err := doMethodAndParseBody(http.MethodGet, apiurl, &out); err != nil {
+		return Checklist{}, err
+	}
+	out.client = c
+	for i := range out.CheckItems {
+		out.CheckItems[i].Checklist = out
+		out.CheckItems[i].client = c
+	}
 	return out, nil
 }
 
@@ -163,6 +197,46 @@ func (ca *Card) Move(listID string) error {
 	// TODO: Eventually handle List and ListID mismatch in a better way.
 	ca.IDList = listID
 	ca.List.ID = listID
+	return nil
+}
+
+func (ca *Card) Checklists() ([]Checklist, error) {
+	c := ca.client
+	apiurl := API_PREFIX + fmt.Sprintf("cards/%s/checklists?key=%s&token=%s", ca.ID, c.APIKey, c.Token)
+	var out []Checklist
+	if err := doMethodAndParseBody(http.MethodGet, apiurl, &out); err != nil {
+		return nil, err
+	}
+	for i := range out {
+		out[i].Card = *ca
+		out[i].Board = ca.Board
+		out[i].client = c
+		for j := range out[i].CheckItems {
+			// Properly set the Checklist for every CheckItem.
+			out[i].CheckItems[j].Checklist = out[i]
+			out[i].CheckItems[j].client = c
+		}
+	}
+	return out, nil
+}
+
+func (ci *CheckItem) Complete() error {
+	c := ci.client
+	apiurl := API_PREFIX + fmt.Sprintf("cards/%s/checkItem/%s?state=complete&key=%s&token=%s", ci.Checklist.IDCard, ci.ID, c.APIKey, c.Token)
+	if err := doMethod(http.MethodPut, apiurl); err != nil {
+		return err
+	}
+	ci.State = "complete"
+	return nil
+}
+
+func (ci *CheckItem) Incomplete() error {
+	c := ci.client
+	apiurl := API_PREFIX + fmt.Sprintf("cards/%s/checkItem/%s?state=incomplete&key=%s&token=%s", ci.Checklist.IDCard, ci.ID, c.APIKey, c.Token)
+	if err := doMethod(http.MethodPut, apiurl); err != nil {
+		return err
+	}
+	ci.State = "incomplete"
 	return nil
 }
 
