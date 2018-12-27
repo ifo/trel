@@ -74,6 +74,16 @@ func (c *Client) Board(id string) (Board, error) {
 	return out, nil
 }
 
+func (c *Client) Card(id string) (Card, error) {
+	apiurl := API_PREFIX + fmt.Sprintf("cards/%s?key=%s&token=%s", id, c.APIKey, c.Token)
+	var out Card
+	if err := doMethodAndParseBody(http.MethodGet, apiurl, &out); err != nil {
+		return Card{}, err
+	}
+	out.client = c
+	return out, nil
+}
+
 func (b Board) Lists() ([]List, error) {
 	c := b.client
 	apiurl := API_PREFIX + fmt.Sprintf("boards/%s/lists?key=%s&token=%s", b.ID, c.APIKey, c.Token)
@@ -141,6 +151,35 @@ func (l List) NewCard(name, desc, position string) (Card, error) {
 	out.List = l
 	out.client = c
 	return out, nil
+}
+
+func (c *Card) Move(listID string) error {
+	cl := c.client
+	apiurl := API_PREFIX + fmt.Sprintf("cards/%s?idList=%s&key=%s&token=%s", c.ID, listID, cl.APIKey, cl.Token)
+	if err := doMethod(http.MethodPut, apiurl); err != nil {
+		return err
+	}
+	// TODO: Eventually handle List and ListID mismatch in a better way.
+	c.IDList = listID
+	c.List.ID = listID
+	return nil
+}
+
+func doMethod(method, apiurl string) error {
+	req, err := http.NewRequest(method, apiurl, nil)
+	if err != nil {
+		return err
+	}
+
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		return err
+	}
+	resp.Body.Close() // Not deferred because we ignore the body.
+	if resp.StatusCode >= 400 {
+		return fmt.Errorf("HTTP Request error, status: %d", resp.StatusCode)
+	}
+	return nil
 }
 
 // t must be a pointer
