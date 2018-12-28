@@ -173,6 +173,19 @@ func (l List) Cards() ([]Card, error) {
 	return out, nil
 }
 
+func (l List) FindCard(name string) (Card, error) {
+	cards, err := l.Cards()
+	if err != nil {
+		return Card{}, err
+	}
+	for _, card := range cards {
+		if card.Name == name {
+			return card, nil
+		}
+	}
+	return Card{}, fmt.Errorf("Card not found with name: %s", name)
+}
+
 func (l List) NewCard(name, desc, position string) (Card, error) {
 	c := l.client
 	name, desc, position = url.QueryEscape(name), url.QueryEscape(desc), url.QueryEscape(position)
