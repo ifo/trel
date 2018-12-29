@@ -64,6 +64,15 @@ type CheckItem struct {
 	client      *Client
 }
 
+type Webhook struct {
+	ID          string `json:"id"`
+	Description string `json:"description"`
+	IDModel     string `json:"idModel"`
+	CallbackURL string `json:"callbackURL"` // TODO: Make this a url.URL instead of a string; add custom json parsing.
+	Active      bool   `json:"active"`
+	client      *Client
+}
+
 func New(username, apiKey, token string) *Client {
 	return &Client{
 		Username: username,
@@ -115,6 +124,17 @@ func (c *Client) Checklist(id string) (Checklist, error) {
 		out.CheckItems[i].Checklist = out
 		out.CheckItems[i].client = c
 	}
+	return out, nil
+}
+
+func (c *Client) NewWebhook(description, callbackURL, idModel string) (Webhook, error) {
+	description, callbackURL = url.QueryEscape(description), url.QueryEscape(callbackURL)
+	apiurl := API_PREFIX + fmt.Sprintf("webhooks/?description=%s&callbackURL=%s&idModel=%s&key=%s&token=%s", description, callbackURL, idModel, c.APIKey, c.Token)
+	var out Webhook
+	if err := doMethodAndParseBody(http.MethodPost, apiurl, &out); err != nil {
+		return Webhook{}, err
+	}
+	out.client = c
 	return out, nil
 }
 
