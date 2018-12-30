@@ -190,6 +190,19 @@ func (b Board) NewList(name, position string) (List, error) {
 	return out, nil
 }
 
+func (b Board) FindList(name string) (List, error) {
+	lists, err := b.Lists()
+	if err != nil {
+		return List{}, err
+	}
+	for _, list := range lists {
+		if list.Name == name {
+			return list, nil
+		}
+	}
+	return List{}, fmt.Errorf("List not found with name: %s", name)
+}
+
 func (l List) Cards() ([]Card, error) {
 	c := l.client
 	apiurl := API_PREFIX + fmt.Sprintf("lists/%s/cards?key=%s&token=%s", l.ID, c.APIKey, c.Token)
