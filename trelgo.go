@@ -138,6 +138,18 @@ func (c *Client) NewWebhook(description, callbackURL, idModel string) (Webhook, 
 	return out, nil
 }
 
+func (c *Client) Webhooks() ([]Webhook, error) {
+	apiurl := API_PREFIX + fmt.Sprintf("tokens/%s/webhooks?key=%s", c.Token, c.APIKey)
+	var out []Webhook
+	if err := doMethodAndParseBody(http.MethodGet, apiurl, &out); err != nil {
+		return nil, err
+	}
+	for i := range out {
+		out[i].client = c
+	}
+	return out, nil
+}
+
 func (b Board) Lists() ([]List, error) {
 	c := b.client
 	apiurl := API_PREFIX + fmt.Sprintf("boards/%s/lists?key=%s&token=%s", b.ID, c.APIKey, c.Token)
@@ -270,6 +282,36 @@ func (ci *CheckItem) Incomplete() error {
 		return err
 	}
 	ci.State = "incomplete"
+	return nil
+}
+
+func (w *Webhook) Activate() error {
+	c := w.client
+	apiurl := API_PREFIX + fmt.Sprintf("webhooks/%s?active=true&key=%s&token=%s", w.ID, c.APIKey, c.Token)
+	if err := doMethod(http.MethodPut, apiurl); err != nil {
+		return err
+	}
+	w.Active = true
+	return nil
+}
+
+func (w *Webhook) Deactivate() error {
+	c := w.client
+	apiurl := API_PREFIX + fmt.Sprintf("webhooks/%s?active=false&key=%s&token=%s", w.ID, c.APIKey, c.Token)
+	if err := doMethod(http.MethodPut, apiurl); err != nil {
+		return err
+	}
+	w.Active = false
+	return nil
+}
+
+func (w *Webhook) Delete() error {
+	c := w.client
+	apiurl := API_PREFIX + fmt.Sprintf("webhooks/%s?key=%s&token=%s", w.ID, c.APIKey, c.Token)
+	if err := doMethod(http.MethodDelete, apiurl); err != nil {
+		return err
+	}
+	w = &Webhook{}
 	return nil
 }
 
