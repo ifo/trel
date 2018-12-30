@@ -1,4 +1,4 @@
-package trelgo
+package trel
 
 import (
 	"encoding/json"
