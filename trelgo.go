@@ -103,6 +103,16 @@ func (c *Client) Board(id string) (Board, error) {
 	return out, nil
 }
 
+func (c *Client) List(id string) (List, error) {
+	apiurl := API_PREFIX + fmt.Sprintf("lists/%s?key=%s&token=%s", id, c.APIKey, c.Token)
+	var out List
+	if err := doMethodAndParseBody(http.MethodGet, apiurl, &out); err != nil {
+		return List{}, err
+	}
+	out.client = c
+	return out, nil
+}
+
 func (c *Client) Card(id string) (Card, error) {
 	apiurl := API_PREFIX + fmt.Sprintf("cards/%s?key=%s&token=%s", id, c.APIKey, c.Token)
 	var out Card
@@ -174,16 +184,6 @@ func (b Board) NewList(name, position string) (List, error) {
 	apiurl := API_PREFIX + fmt.Sprintf("boards/%s/lists?name=%s&pos=%s&key=%s&token=%s", b.ID, name, position, c.APIKey, c.Token)
 	var out List
 	if err := doMethodAndParseBody(http.MethodPost, apiurl, &out); err != nil {
-		return List{}, err
-	}
-	out.client = c
-	return out, nil
-}
-
-func (c *Client) List(id string) (List, error) {
-	apiurl := API_PREFIX + fmt.Sprintf("lists/%s?key=%s&token=%s", id, c.APIKey, c.Token)
-	var out List
-	if err := doMethodAndParseBody(http.MethodGet, apiurl, &out); err != nil {
 		return List{}, err
 	}
 	out.client = c
