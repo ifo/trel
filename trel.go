@@ -73,6 +73,13 @@ type Webhook struct {
 	client      *Client
 }
 
+type Boards []Board
+type Lists []List
+type Cards []Card
+type Checklists []Checklist
+type CheckItems []CheckItem
+type Webhooks []Webhook
+
 func New(username, apiKey, token string) *Client {
 	return &Client{
 		Username: username,
@@ -81,9 +88,9 @@ func New(username, apiKey, token string) *Client {
 	}
 }
 
-func (c *Client) Boards() ([]Board, error) {
+func (c *Client) Boards() (Boards, error) {
 	apiurl := API_PREFIX + fmt.Sprintf("members/%s/boards?key=%s&token=%s", c.Username, c.APIKey, c.Token)
-	var out []Board
+	var out Boards
 	if err := doMethodAndParseBody(http.MethodGet, apiurl, &out); err != nil {
 		return nil, err
 	}
@@ -148,9 +155,9 @@ func (c *Client) NewWebhook(description, callbackURL, idModel string) (Webhook, 
 	return out, nil
 }
 
-func (c *Client) Webhooks() ([]Webhook, error) {
+func (c *Client) Webhooks() (Webhooks, error) {
 	apiurl := API_PREFIX + fmt.Sprintf("tokens/%s/webhooks?key=%s", c.Token, c.APIKey)
-	var out []Webhook
+	var out Webhooks
 	if err := doMethodAndParseBody(http.MethodGet, apiurl, &out); err != nil {
 		return nil, err
 	}
@@ -160,10 +167,10 @@ func (c *Client) Webhooks() ([]Webhook, error) {
 	return out, nil
 }
 
-func (b Board) Lists() ([]List, error) {
+func (b Board) Lists() (Lists, error) {
 	c := b.client
 	apiurl := API_PREFIX + fmt.Sprintf("boards/%s/lists?key=%s&token=%s", b.ID, c.APIKey, c.Token)
-	var out []List
+	var out Lists
 	if err := doMethodAndParseBody(http.MethodGet, apiurl, &out); err != nil {
 		return nil, err
 	}
@@ -203,7 +210,7 @@ func (b Board) FindList(name string) (List, error) {
 	return List{}, NotFoundError{Type: "List", Name: name}
 }
 
-func (l List) Cards() ([]Card, error) {
+func (l List) Cards() (Cards, error) {
 	c := l.client
 	apiurl := API_PREFIX + fmt.Sprintf("lists/%s/cards?key=%s&token=%s", l.ID, c.APIKey, c.Token)
 	var out []Card
@@ -258,10 +265,10 @@ func (ca *Card) Move(listID string) error {
 	return nil
 }
 
-func (ca *Card) Checklists() ([]Checklist, error) {
+func (ca *Card) Checklists() (Checklists, error) {
 	c := ca.client
 	apiurl := API_PREFIX + fmt.Sprintf("cards/%s/checklists?key=%s&token=%s", ca.ID, c.APIKey, c.Token)
-	var out []Checklist
+	var out Checklists
 	if err := doMethodAndParseBody(http.MethodGet, apiurl, &out); err != nil {
 		return nil, err
 	}
