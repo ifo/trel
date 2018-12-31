@@ -200,7 +200,7 @@ func (b Board) FindList(name string) (List, error) {
 			return list, nil
 		}
 	}
-	return List{}, fmt.Errorf("List not found with name: %s", name)
+	return List{}, NotFoundError{Type: "List", Name: name}
 }
 
 func (l List) Cards() ([]Card, error) {
@@ -228,7 +228,7 @@ func (l List) FindCard(name string) (Card, error) {
 			return card, nil
 		}
 	}
-	return Card{}, fmt.Errorf("Card not found with name: %s", name)
+	return Card{}, NotFoundError{Type: "Card", Name: name}
 }
 
 func (l List) NewCard(name, desc, position string) (Card, error) {
@@ -340,7 +340,7 @@ func doMethod(method, apiurl string) error {
 	}
 	resp.Body.Close() // Not deferred because we ignore the body.
 	if resp.StatusCode >= 400 {
-		return fmt.Errorf("HTTP Request error, status: %d", resp.StatusCode)
+		return HTTPRequestError{StatusCode: resp.StatusCode}
 	}
 	return nil
 }
@@ -358,7 +358,7 @@ func doMethodAndParseBody(method, apiurl string, t interface{}) error {
 	}
 	defer resp.Body.Close()
 	if resp.StatusCode >= 400 {
-		return fmt.Errorf("HTTP Request error, status: %d", resp.StatusCode)
+		return HTTPRequestError{StatusCode: resp.StatusCode}
 	}
 
 	body, err := ioutil.ReadAll(resp.Body)
@@ -367,4 +367,21 @@ func doMethodAndParseBody(method, apiurl string, t interface{}) error {
 	}
 
 	return json.Unmarshal(body, t)
+}
+
+type NotFoundError struct {
+	Type string
+	Name string
+}
+
+func (n NotFoundError) Error() string {
+	return fmt.Sprintf("%s with name %q was not found", n.Type, n.Name)
+}
+
+type HTTPRequestError struct {
+	StatusCode int
+}
+
+func (h HTTPRequestError) Error() string {
+	return fmt.Sprintf("HTTP Request error with status: %d", h.StatusCode)
 }
