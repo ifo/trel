@@ -202,7 +202,11 @@ func (b Board) FindList(name string) (List, error) {
 	if err != nil {
 		return List{}, err
 	}
-	for _, list := range lists {
+	return lists.FindList(name)
+}
+
+func (ls Lists) FindList(name string) (List, error) {
+	for _, list := range ls {
 		if list.Name == name {
 			return list, nil
 		}
@@ -230,7 +234,11 @@ func (l List) FindCard(name string) (Card, error) {
 	if err != nil {
 		return Card{}, err
 	}
-	for _, card := range cards {
+	return cards.FindCard(name)
+}
+
+func (cs Cards) FindCard(name string) (Card, error) {
+	for _, card := range cs {
 		if card.Name == name {
 			return card, nil
 		}
