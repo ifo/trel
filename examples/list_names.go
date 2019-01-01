@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/ifo/trelgo"
+	"github.com/ifo/trel"
 )
 
 func main() {
@@ -15,7 +15,7 @@ func main() {
 	boardID := flag.String("b", "board id", "your board's id")
 	flag.Parse()
 
-	client := trelgo.New(
+	client := trel.New(
 		*username, // Your username
 		*apiKey,   // Your api key
 		*token,    // Your token (https://trello.com/app-key)
