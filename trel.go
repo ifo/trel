@@ -262,6 +262,11 @@ func (l List) NewCard(name, desc, position string) (Card, error) {
 }
 
 func (ca *Card) Move(listID string) error {
+	// Don't do anything if the card is already on that list.
+	if ca.IDList == listID {
+		return nil
+	}
+
 	c := ca.client
 	apiurl := API_PREFIX + fmt.Sprintf("cards/%s?idList=%s&key=%s&token=%s", ca.ID, listID, c.APIKey, c.Token)
 	if err := doMethod(http.MethodPut, apiurl); err != nil {
