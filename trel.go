@@ -329,6 +329,11 @@ func (ci *CheckItem) Incomplete() error {
 }
 
 func (w *Webhook) Activate() error {
+	// Don't activate active webhooks.
+	if w.Active {
+		return nil
+	}
+
 	c := w.client
 	apiurl := API_PREFIX + fmt.Sprintf("webhooks/%s?active=true&key=%s&token=%s", w.ID, c.APIKey, c.Token)
 	if err := doMethod(http.MethodPut, apiurl); err != nil {
@@ -339,6 +344,11 @@ func (w *Webhook) Activate() error {
 }
 
 func (w *Webhook) Deactivate() error {
+	// Don't deactivate inactive webhooks.
+	if !w.Active {
+		return nil
+	}
+
 	c := w.client
 	apiurl := API_PREFIX + fmt.Sprintf("webhooks/%s?active=false&key=%s&token=%s", w.ID, c.APIKey, c.Token)
 	if err := doMethod(http.MethodPut, apiurl); err != nil {
