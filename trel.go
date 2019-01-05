@@ -202,16 +202,7 @@ func (b Board) FindList(name string) (List, error) {
 	if err != nil {
 		return List{}, err
 	}
-	return lists.FindList(name)
-}
-
-func (ls Lists) FindList(name string) (List, error) {
-	for _, list := range ls {
-		if list.Name == name {
-			return list, nil
-		}
-	}
-	return List{}, NotFoundError{Type: "List", Name: name}
+	return lists.Find(name)
 }
 
 func (l List) Cards() (Cards, error) {
@@ -234,16 +225,7 @@ func (l List) FindCard(name string) (Card, error) {
 	if err != nil {
 		return Card{}, err
 	}
-	return cards.FindCard(name)
-}
-
-func (cs Cards) FindCard(name string) (Card, error) {
-	for _, card := range cs {
-		if card.Name == name {
-			return card, nil
-		}
-	}
-	return Card{}, NotFoundError{Type: "Card", Name: name}
+	return cards.Find(name)
 }
 
 func (l List) NewCard(name, desc, position string) (Card, error) {
@@ -259,6 +241,15 @@ func (l List) NewCard(name, desc, position string) (Card, error) {
 	out.List = l
 	out.client = c
 	return out, nil
+}
+
+func (ls Lists) Find(name string) (List, error) {
+	for _, list := range ls {
+		if list.Name == name {
+			return list, nil
+		}
+	}
+	return List{}, NotFoundError{Type: "List", Identifier: name}
 }
 
 func (ca *Card) Move(listID string) error {
@@ -296,6 +287,15 @@ func (ca *Card) Checklists() (Checklists, error) {
 		}
 	}
 	return out, nil
+}
+
+func (cs Cards) Find(name string) (Card, error) {
+	for _, card := range cs {
+		if card.Name == name {
+			return card, nil
+		}
+	}
+	return Card{}, NotFoundError{Type: "Card", Identifier: name}
 }
 
 func (ci *CheckItem) Complete() error {
@@ -348,6 +348,15 @@ func (w *Webhook) Delete() error {
 	return nil
 }
 
+func (ws Webhooks) Find(modelID string) (Webhook, error) {
+	for _, w := range ws {
+		if w.IDModel == modelID {
+			return w, nil
+		}
+	}
+	return Webhook{}, NotFoundError{Type: "Webhook", Identifier: modelID}
+}
+
 func doMethod(method, apiurl string) error {
 	req, err := http.NewRequest(method, apiurl, nil)
 	if err != nil {
@@ -390,12 +399,12 @@ func doMethodAndParseBody(method, apiurl string, t interface{}) error {
 }
 
 type NotFoundError struct {
-	Type string
-	Name string
+	Type       string
+	Identifier string
 }
 
 func (n NotFoundError) Error() string {
-	return fmt.Sprintf("%s with name %q was not found", n.Type, n.Name)
+	return fmt.Sprintf("%s with identifier %q was not found", n.Type, n.Identifier)
 }
 
 type HTTPRequestError struct {
