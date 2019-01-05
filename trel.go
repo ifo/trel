@@ -167,6 +167,16 @@ func (c *Client) Webhooks() (Webhooks, error) {
 	return out, nil
 }
 
+func (c *Client) Webhook(id string) (Webhook, error) {
+	apiurl := API_PREFIX + fmt.Sprintf("webhooks/%s?key=%s&token=%s", id, c.APIKey, c.Token)
+	var out Webhook
+	if err := doMethodAndParseBody(http.MethodGet, apiurl, &out); err != nil {
+		return Webhook{}, err
+	}
+	out.client = c
+	return out, nil
+}
+
 func (b Board) Lists() (Lists, error) {
 	c := b.client
 	apiurl := API_PREFIX + fmt.Sprintf("boards/%s/lists?key=%s&token=%s", b.ID, c.APIKey, c.Token)
