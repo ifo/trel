@@ -212,7 +212,8 @@ func (b Board) FindList(name string) (List, error) {
 	if err != nil {
 		return List{}, err
 	}
-	return lists.Find(name)
+	l, err := lists.Find(name)
+	return *l, err
 }
 
 func (l List) Cards() (Cards, error) {
@@ -235,7 +236,8 @@ func (l List) FindCard(name string) (Card, error) {
 	if err != nil {
 		return Card{}, err
 	}
-	return cards.Find(name)
+	c, err := cards.Find(name)
+	return *c, err
 }
 
 func (l List) NewCard(name, desc, position string) (Card, error) {
@@ -253,13 +255,13 @@ func (l List) NewCard(name, desc, position string) (Card, error) {
 	return out, nil
 }
 
-func (ls Lists) Find(name string) (List, error) {
+func (ls Lists) Find(name string) (*List, error) {
 	for _, list := range ls {
 		if list.Name == name {
-			return list, nil
+			return &list, nil
 		}
 	}
-	return List{}, NotFoundError{Type: "List", Identifier: name}
+	return &List{}, NotFoundError{Type: "List", Identifier: name}
 }
 
 func (ca *Card) Move(listID string) error {
@@ -299,13 +301,13 @@ func (ca *Card) Checklists() (Checklists, error) {
 	return out, nil
 }
 
-func (cs Cards) Find(name string) (Card, error) {
+func (cs Cards) Find(name string) (*Card, error) {
 	for _, card := range cs {
 		if card.Name == name {
-			return card, nil
+			return &card, nil
 		}
 	}
-	return Card{}, NotFoundError{Type: "Card", Identifier: name}
+	return &Card{}, NotFoundError{Type: "Card", Identifier: name}
 }
 
 func (ci *CheckItem) Complete() error {
@@ -368,13 +370,13 @@ func (w *Webhook) Delete() error {
 	return nil
 }
 
-func (ws Webhooks) Find(modelID string) (Webhook, error) {
+func (ws Webhooks) Find(modelID string) (*Webhook, error) {
 	for _, w := range ws {
 		if w.IDModel == modelID {
-			return w, nil
+			return &w, nil
 		}
 	}
-	return Webhook{}, NotFoundError{Type: "Webhook", Identifier: modelID}
+	return &Webhook{}, NotFoundError{Type: "Webhook", Identifier: modelID}
 }
 
 func doMethod(method, apiurl string) error {
