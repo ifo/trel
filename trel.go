@@ -330,6 +330,15 @@ func (ci *CheckItem) Incomplete() error {
 	return nil
 }
 
+func (cis CheckItems) Find(name string) (*CheckItem, error) {
+	for i := range cis {
+		if cis[i].Name == name {
+			return &cis[i], nil
+		}
+	}
+	return &CheckItem{}, NotFoundError{Type: "CheckItem", Identifier: name}
+}
+
 func (w *Webhook) Activate() error {
 	// Don't activate active webhooks.
 	if w.Active {
