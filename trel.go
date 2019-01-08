@@ -45,11 +45,11 @@ type Card struct {
 }
 
 type Checklist struct {
-	ID         string      `json:"id"`
-	Name       string      `json:"name"`
-	IDBoard    string      `json:"idBoard"`
-	IDCard     string      `json:"idCard"`
-	CheckItems []CheckItem `json:"checkItems"`
+	ID         string     `json:"id"`
+	Name       string     `json:"name"`
+	IDBoard    string     `json:"idBoard"`
+	IDCard     string     `json:"idCard"`
+	CheckItems CheckItems `json:"checkItems"`
 	Card       Card
 	Board      Board
 	client     *Client
@@ -219,7 +219,7 @@ func (b Board) FindList(name string) (List, error) {
 func (l List) Cards() (Cards, error) {
 	c := l.client
 	apiurl := API_PREFIX + fmt.Sprintf("lists/%s/cards?key=%s&token=%s", l.ID, c.APIKey, c.Token)
-	var out []Card
+	var out Cards
 	if err := doMethodAndParseBody(http.MethodGet, apiurl, &out); err != nil {
 		return nil, err
 	}
