@@ -256,9 +256,9 @@ func (l List) NewCard(name, desc, position string) (Card, error) {
 }
 
 func (ls Lists) Find(name string) (*List, error) {
-	for _, list := range ls {
-		if list.Name == name {
-			return &list, nil
+	for i := range ls {
+		if ls[i].Name == name {
+			return &ls[i], nil
 		}
 	}
 	return &List{}, NotFoundError{Type: "List", Identifier: name}
@@ -302,9 +302,9 @@ func (ca *Card) Checklists() (Checklists, error) {
 }
 
 func (cs Cards) Find(name string) (*Card, error) {
-	for _, card := range cs {
-		if card.Name == name {
-			return &card, nil
+	for i := range cs {
+		if cs[i].Name == name {
+			return &cs[i], nil
 		}
 	}
 	return &Card{}, NotFoundError{Type: "Card", Identifier: name}
@@ -371,9 +371,9 @@ func (w *Webhook) Delete() error {
 }
 
 func (ws Webhooks) Find(modelID string) (*Webhook, error) {
-	for _, w := range ws {
-		if w.IDModel == modelID {
-			return &w, nil
+	for i := range ws {
+		if ws[i].IDModel == modelID {
+			return &ws[i], nil
 		}
 	}
 	return &Webhook{}, NotFoundError{Type: "Webhook", Identifier: modelID}
