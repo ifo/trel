@@ -281,6 +281,20 @@ func (ca *Card) Move(listID string) error {
 	return nil
 }
 
+func (ca *Card) Rename(name string) error {
+	if ca.Name == name {
+		return nil
+	}
+
+	c := ca.client
+	apiurl := API_PREFIX + fmt.Sprintf("cards/%s?name=%s&key=%s&token=%s", ca.ID, name, c.APIKey, c.Token)
+	if err := doMethod(http.MethodPut, apiurl); err != nil {
+		return err
+	}
+	ca.Name = name
+	return nil
+}
+
 func (ca *Card) Checklists() (Checklists, error) {
 	c := ca.client
 	apiurl := API_PREFIX + fmt.Sprintf("cards/%s/checklists?key=%s&token=%s", ca.ID, c.APIKey, c.Token)
