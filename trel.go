@@ -13,9 +13,8 @@ const API_PREFIX = "https://api.trello.com/1/"
 type Client struct {
 	client *http.Client
 
-	Username string
-	APIKey   string
-	Token    string
+	APIKey string
+	Token  string
 }
 
 type Board struct {
@@ -82,21 +81,20 @@ type Checklists []Checklist
 type CheckItems []CheckItem
 type Webhooks []Webhook
 
-func New(client *http.Client, username, apiKey, token string) *Client {
+func New(client *http.Client, apiKey, token string) *Client {
 	if client == nil {
 		client = http.DefaultClient
 	}
 
 	return &Client{
-		client:   client,
-		Username: username,
-		APIKey:   apiKey,
-		Token:    token,
+		client: client,
+		APIKey: apiKey,
+		Token:  token,
 	}
 }
 
-func (c *Client) Boards() (Boards, error) {
-	apiurl := API_PREFIX + fmt.Sprintf("members/%s/boards?key=%s&token=%s", c.Username, c.APIKey, c.Token)
+func (c *Client) Boards(username string) (Boards, error) {
+	apiurl := API_PREFIX + fmt.Sprintf("members/%s/boards?key=%s&token=%s", username, c.APIKey, c.Token)
 	var out Boards
 	if err := c.doMethodAndParseBody(http.MethodGet, apiurl, &out); err != nil {
 		return nil, err

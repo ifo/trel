@@ -18,10 +18,9 @@ func main() {
 	flag.Parse()
 
 	client := trel.New(
-		nil,       // Default http client
-		*username, // Your username
-		*apiKey,   // Your api key
-		*token,    // Your token (https://trello.com/app-key)
+		nil,     // Default http client
+		*apiKey, // Your api key
+		*token,  // Your token (https://trello.com/app-key)
 	)
 
 	fromList, err := client.List(*listFromID)
