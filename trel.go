@@ -414,7 +414,7 @@ func (ws Webhooks) Find(modelID string) (*Webhook, error) {
 }
 
 func (c *Client) doMethod(method, apiurl string) error {
-	reqURL := c.BaseURL.String() + apiurl
+	reqURL := joinPath(c.BaseURL.String(), apiurl)
 	req, err := http.NewRequest(method, reqURL, nil)
 	if err != nil {
 		return err
@@ -433,7 +433,7 @@ func (c *Client) doMethod(method, apiurl string) error {
 
 // t must be a pointer.
 func (c *Client) doMethodAndParseBody(method, apiurl string, t interface{}) error {
-	reqURL := c.BaseURL.String() + apiurl
+	reqURL := joinPath(c.BaseURL.String(), apiurl)
 	req, err := http.NewRequest(method, reqURL, nil)
 	if err != nil {
 		return err
@@ -471,4 +471,12 @@ type HTTPRequestError struct {
 
 func (h HTTPRequestError) Error() string {
 	return fmt.Sprintf("HTTP Request error with status: %d", h.StatusCode)
+}
+
+func joinPath(host, path string) string {
+	runeHost, runePath := []rune(host), []rune(path)
+	if runeHost[len(runeHost)-1] != '/' && runePath[0] != '/' {
+		return host + "/" + path
+	}
+	return host + path
 }
