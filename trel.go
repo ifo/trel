@@ -8,10 +8,12 @@ import (
 	"net/url"
 )
 
-const API_PREFIX = "https://api.trello.com/1/"
+const defaultAPIPrefix = "https://api.trello.com/1/"
 
 type Client struct {
 	client *http.Client
+
+	BaseURL *url.URL
 
 	APIKey string
 	Token  string
@@ -86,15 +88,18 @@ func New(client *http.Client, apiKey, token string) *Client {
 		client = http.DefaultClient
 	}
 
+	baseURL, _ := url.Parse(defaultAPIPrefix)
+
 	return &Client{
-		client: client,
-		APIKey: apiKey,
-		Token:  token,
+		client:  client,
+		BaseURL: baseURL,
+		APIKey:  apiKey,
+		Token:   token,
 	}
 }
 
 func (c *Client) Boards(username string) (Boards, error) {
-	apiurl := API_PREFIX + fmt.Sprintf("members/%s/boards?key=%s&token=%s", username, c.APIKey, c.Token)
+	apiurl := fmt.Sprintf("members/%s/boards?key=%s&token=%s", username, c.APIKey, c.Token)
 	var out Boards
 	if err := c.doMethodAndParseBody(http.MethodGet, apiurl, &out); err != nil {
 		return nil, err
@@ -106,7 +111,7 @@ func (c *Client) Boards(username string) (Boards, error) {
 }
 
 func (c *Client) Board(id string) (Board, error) {
-	apiurl := API_PREFIX + fmt.Sprintf("boards/%s?key=%s&token=%s", id, c.APIKey, c.Token)
+	apiurl := fmt.Sprintf("boards/%s?key=%s&token=%s", id, c.APIKey, c.Token)
 	var out Board
 	if err := c.doMethodAndParseBody(http.MethodGet, apiurl, &out); err != nil {
 		return Board{}, err
@@ -116,7 +121,7 @@ func (c *Client) Board(id string) (Board, error) {
 }
 
 func (c *Client) List(id string) (List, error) {
-	apiurl := API_PREFIX + fmt.Sprintf("lists/%s?key=%s&token=%s", id, c.APIKey, c.Token)
+	apiurl := fmt.Sprintf("lists/%s?key=%s&token=%s", id, c.APIKey, c.Token)
 	var out List
 	if err := c.doMethodAndParseBody(http.MethodGet, apiurl, &out); err != nil {
 		return List{}, err
@@ -126,7 +131,7 @@ func (c *Client) List(id string) (List, error) {
 }
 
 func (c *Client) Card(id string) (Card, error) {
-	apiurl := API_PREFIX + fmt.Sprintf("cards/%s?key=%s&token=%s", id, c.APIKey, c.Token)
+	apiurl := fmt.Sprintf("cards/%s?key=%s&token=%s", id, c.APIKey, c.Token)
 	var out Card
 	if err := c.doMethodAndParseBody(http.MethodGet, apiurl, &out); err != nil {
 		return Card{}, err
@@ -136,7 +141,7 @@ func (c *Client) Card(id string) (Card, error) {
 }
 
 func (c *Client) Checklist(id string) (Checklist, error) {
-	apiurl := API_PREFIX + fmt.Sprintf("checklists/%s?key=%s&token=%s", id, c.APIKey, c.Token)
+	apiurl := fmt.Sprintf("checklists/%s?key=%s&token=%s", id, c.APIKey, c.Token)
 	var out Checklist
 	if err := c.doMethodAndParseBody(http.MethodGet, apiurl, &out); err != nil {
 		return Checklist{}, err
@@ -151,7 +156,7 @@ func (c *Client) Checklist(id string) (Checklist, error) {
 
 func (c *Client) NewWebhook(description, callbackURL, idModel string) (Webhook, error) {
 	description, callbackURL = url.QueryEscape(description), url.QueryEscape(callbackURL)
-	apiurl := API_PREFIX + fmt.Sprintf("webhooks/?description=%s&callbackURL=%s&idModel=%s&key=%s&token=%s", description, callbackURL, idModel, c.APIKey, c.Token)
+	apiurl := fmt.Sprintf("webhooks/?description=%s&callbackURL=%s&idModel=%s&key=%s&token=%s", description, callbackURL, idModel, c.APIKey, c.Token)
 	var out Webhook
 	if err := c.doMethodAndParseBody(http.MethodPost, apiurl, &out); err != nil {
 		return Webhook{}, err
@@ -161,7 +166,7 @@ func (c *Client) NewWebhook(description, callbackURL, idModel string) (Webhook, 
 }
 
 func (c *Client) Webhooks() (Webhooks, error) {
-	apiurl := API_PREFIX + fmt.Sprintf("tokens/%s/webhooks?key=%s", c.Token, c.APIKey)
+	apiurl := fmt.Sprintf("tokens/%s/webhooks?key=%s", c.Token, c.APIKey)
 	var out Webhooks
 	if err := c.doMethodAndParseBody(http.MethodGet, apiurl, &out); err != nil {
 		return nil, err
@@ -173,7 +178,7 @@ func (c *Client) Webhooks() (Webhooks, error) {
 }
 
 func (c *Client) Webhook(id string) (Webhook, error) {
-	apiurl := API_PREFIX + fmt.Sprintf("webhooks/%s?key=%s&token=%s", id, c.APIKey, c.Token)
+	apiurl := fmt.Sprintf("webhooks/%s?key=%s&token=%s", id, c.APIKey, c.Token)
 	var out Webhook
 	if err := c.doMethodAndParseBody(http.MethodGet, apiurl, &out); err != nil {
 		return Webhook{}, err
@@ -184,7 +189,7 @@ func (c *Client) Webhook(id string) (Webhook, error) {
 
 func (b Board) Lists() (Lists, error) {
 	c := b.client
-	apiurl := API_PREFIX + fmt.Sprintf("boards/%s/lists?key=%s&token=%s", b.ID, c.APIKey, c.Token)
+	apiurl := fmt.Sprintf("boards/%s/lists?key=%s&token=%s", b.ID, c.APIKey, c.Token)
 	var out Lists
 	if err := c.doMethodAndParseBody(http.MethodGet, apiurl, &out); err != nil {
 		return nil, err
@@ -203,7 +208,7 @@ func (b Board) NewList(name, position string) (List, error) {
 	}
 	// TODO: Handle query arguments and escaping better, probably use url.URL.
 	name, position = url.QueryEscape(name), url.QueryEscape(position)
-	apiurl := API_PREFIX + fmt.Sprintf("boards/%s/lists?name=%s&pos=%s&key=%s&token=%s", b.ID, name, position, c.APIKey, c.Token)
+	apiurl := fmt.Sprintf("boards/%s/lists?name=%s&pos=%s&key=%s&token=%s", b.ID, name, position, c.APIKey, c.Token)
 	var out List
 	if err := c.doMethodAndParseBody(http.MethodPost, apiurl, &out); err != nil {
 		return List{}, err
@@ -223,7 +228,7 @@ func (b Board) FindList(name string) (List, error) {
 
 func (l List) Cards() (Cards, error) {
 	c := l.client
-	apiurl := API_PREFIX + fmt.Sprintf("lists/%s/cards?key=%s&token=%s", l.ID, c.APIKey, c.Token)
+	apiurl := fmt.Sprintf("lists/%s/cards?key=%s&token=%s", l.ID, c.APIKey, c.Token)
 	var out Cards
 	if err := c.doMethodAndParseBody(http.MethodGet, apiurl, &out); err != nil {
 		return nil, err
@@ -249,7 +254,7 @@ func (l List) NewCard(name, desc, position string) (Card, error) {
 	c := l.client
 	name, desc, position = url.QueryEscape(name), url.QueryEscape(desc), url.QueryEscape(position)
 	query := fmt.Sprintf("idList=%s&name=%s&desc=%s&pos=%s&key=%s&token=%s", l.ID, name, desc, position, c.APIKey, c.Token)
-	apiurl := API_PREFIX + "cards?" + query
+	apiurl := "cards?" + query
 	var out Card
 	if err := c.doMethodAndParseBody(http.MethodPost, apiurl, &out); err != nil {
 		return Card{}, err
@@ -276,7 +281,7 @@ func (ca *Card) Move(listID string) error {
 	}
 
 	c := ca.client
-	apiurl := API_PREFIX + fmt.Sprintf("cards/%s?idList=%s&key=%s&token=%s", ca.ID, listID, c.APIKey, c.Token)
+	apiurl := fmt.Sprintf("cards/%s?idList=%s&key=%s&token=%s", ca.ID, listID, c.APIKey, c.Token)
 	if err := c.doMethod(http.MethodPut, apiurl); err != nil {
 		return err
 	}
@@ -293,7 +298,7 @@ func (ca *Card) Rename(name string) error {
 
 	c := ca.client
 	name = url.QueryEscape(name)
-	apiurl := API_PREFIX + fmt.Sprintf("cards/%s?name=%s&key=%s&token=%s", ca.ID, name, c.APIKey, c.Token)
+	apiurl := fmt.Sprintf("cards/%s?name=%s&key=%s&token=%s", ca.ID, name, c.APIKey, c.Token)
 	if err := c.doMethod(http.MethodPut, apiurl); err != nil {
 		return err
 	}
@@ -303,7 +308,7 @@ func (ca *Card) Rename(name string) error {
 
 func (ca *Card) Checklists() (Checklists, error) {
 	c := ca.client
-	apiurl := API_PREFIX + fmt.Sprintf("cards/%s/checklists?key=%s&token=%s", ca.ID, c.APIKey, c.Token)
+	apiurl := fmt.Sprintf("cards/%s/checklists?key=%s&token=%s", ca.ID, c.APIKey, c.Token)
 	var out Checklists
 	if err := c.doMethodAndParseBody(http.MethodGet, apiurl, &out); err != nil {
 		return nil, err
@@ -332,7 +337,7 @@ func (cs Cards) Find(name string) (*Card, error) {
 
 func (ci *CheckItem) Complete() error {
 	c := ci.client
-	apiurl := API_PREFIX + fmt.Sprintf("cards/%s/checkItem/%s?state=complete&key=%s&token=%s", ci.Checklist.IDCard, ci.ID, c.APIKey, c.Token)
+	apiurl := fmt.Sprintf("cards/%s/checkItem/%s?state=complete&key=%s&token=%s", ci.Checklist.IDCard, ci.ID, c.APIKey, c.Token)
 	if err := c.doMethod(http.MethodPut, apiurl); err != nil {
 		return err
 	}
@@ -342,7 +347,7 @@ func (ci *CheckItem) Complete() error {
 
 func (ci *CheckItem) Incomplete() error {
 	c := ci.client
-	apiurl := API_PREFIX + fmt.Sprintf("cards/%s/checkItem/%s?state=incomplete&key=%s&token=%s", ci.Checklist.IDCard, ci.ID, c.APIKey, c.Token)
+	apiurl := fmt.Sprintf("cards/%s/checkItem/%s?state=incomplete&key=%s&token=%s", ci.Checklist.IDCard, ci.ID, c.APIKey, c.Token)
 	if err := c.doMethod(http.MethodPut, apiurl); err != nil {
 		return err
 	}
@@ -366,7 +371,7 @@ func (w *Webhook) Activate() error {
 	}
 
 	c := w.client
-	apiurl := API_PREFIX + fmt.Sprintf("webhooks/%s?active=true&key=%s&token=%s", w.ID, c.APIKey, c.Token)
+	apiurl := fmt.Sprintf("webhooks/%s?active=true&key=%s&token=%s", w.ID, c.APIKey, c.Token)
 	if err := c.doMethod(http.MethodPut, apiurl); err != nil {
 		return err
 	}
@@ -381,7 +386,7 @@ func (w *Webhook) Deactivate() error {
 	}
 
 	c := w.client
-	apiurl := API_PREFIX + fmt.Sprintf("webhooks/%s?active=false&key=%s&token=%s", w.ID, c.APIKey, c.Token)
+	apiurl := fmt.Sprintf("webhooks/%s?active=false&key=%s&token=%s", w.ID, c.APIKey, c.Token)
 	if err := c.doMethod(http.MethodPut, apiurl); err != nil {
 		return err
 	}
@@ -391,7 +396,7 @@ func (w *Webhook) Deactivate() error {
 
 func (w *Webhook) Delete() error {
 	c := w.client
-	apiurl := API_PREFIX + fmt.Sprintf("webhooks/%s?key=%s&token=%s", w.ID, c.APIKey, c.Token)
+	apiurl := fmt.Sprintf("webhooks/%s?key=%s&token=%s", w.ID, c.APIKey, c.Token)
 	if err := c.doMethod(http.MethodDelete, apiurl); err != nil {
 		return err
 	}
@@ -409,7 +414,8 @@ func (ws Webhooks) Find(modelID string) (*Webhook, error) {
 }
 
 func (c *Client) doMethod(method, apiurl string) error {
-	req, err := http.NewRequest(method, apiurl, nil)
+	reqURL := c.BaseURL.String() + apiurl
+	req, err := http.NewRequest(method, reqURL, nil)
 	if err != nil {
 		return err
 	}
@@ -427,7 +433,8 @@ func (c *Client) doMethod(method, apiurl string) error {
 
 // t must be a pointer.
 func (c *Client) doMethodAndParseBody(method, apiurl string, t interface{}) error {
-	req, err := http.NewRequest(method, apiurl, nil)
+	reqURL := c.BaseURL.String() + apiurl
+	req, err := http.NewRequest(method, reqURL, nil)
 	if err != nil {
 		return err
 	}
