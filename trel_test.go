@@ -37,6 +37,27 @@ func TestClient_Boards(t *testing.T) {
 		t.Errorf("Expected \"Test\", got %q\n", boards[0].Name)
 	}
 	if boards[0].ID != "111122223333444455556666" {
-		t.Errorf("Expected \"111122223333444455556666\", got %q\n", boards[0].ID)
+		t.Errorf("Expected %q, got %q\n", "111122223333444455556666", boards[0].ID)
+	}
+}
+
+func TestClient_Board(t *testing.T) {
+	client, mux, server := setupClientMuxServer()
+	defer server.Close()
+
+	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		fmt.Fprint(w, `{"name": "Test", "id": "111122223333444455556666"}`)
+	})
+
+	board, err := client.Board("111122223333444455556666")
+	if err != nil {
+		t.Error(err)
+	}
+
+	if board.Name != "Test" {
+		t.Errorf("Expected \"Test\", got %q\n", board.Name)
+	}
+	if board.ID != "111122223333444455556666" {
+		t.Errorf("Expected %q, got %q\n", "111122223333444455556666", board.ID)
 	}
 }
