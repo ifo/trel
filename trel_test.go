@@ -61,3 +61,31 @@ func TestClient_Board(t *testing.T) {
 		t.Errorf("Expected %q, got %q\n", "111122223333444455556666", board.ID)
 	}
 }
+
+func TestClient_List(t *testing.T) {
+	client, mux, server := setupClientMuxServer()
+	defer server.Close()
+
+	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		fmt.Fprint(w, `{"id": "1234", "name": "Test", "closed": false, "idBoard": "5678"}`)
+	})
+
+	list, err := client.List("1234")
+	if err != nil {
+		t.Error(err)
+	}
+
+	if list.Name != "Test" {
+		t.Errorf("Expected %q, got %q\n", "Test", list.Name)
+	}
+	if list.ID != "1234" {
+		t.Errorf("Expected %q, got %q\n", "1234", list.ID)
+	}
+	if list.IDBoard != "5678" {
+		t.Errorf("Expected %q, got %q\n", "5678", list.IDBoard)
+	}
+	if list.Closed != false {
+		t.Errorf("Expected %t, got %t\n", false, list.Closed)
+	}
+	// Not checking list.Board because it is only set when a list is obtained from a board.
+}
