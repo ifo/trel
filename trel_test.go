@@ -45,20 +45,34 @@ func TestClient_Board(t *testing.T) {
 	client, mux, server := setupClientMuxServer()
 	defer server.Close()
 
+	cases := []struct {
+		Name string
+		ID   string
+		Body string
+	}{
+		{Name: "Test", ID: "1234", Body: `{"name": "Test", "id": "1234"}`},
+		{Name: "Board", ID: "1234", Body: `{"name": "Board", "id": "1234"}`},
+	}
+
+	body := ""
 	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		fmt.Fprint(w, `{"name": "Test", "id": "1234"}`)
+		fmt.Fprint(w, body)
 	})
 
-	board, err := client.Board("1234")
-	if err != nil {
-		t.Error(err)
-	}
+	for _, c := range cases {
+		body = c.Body
 
-	if board.Name != "Test" {
-		t.Errorf("Expected %q, got %q\n", "Test", board.Name)
-	}
-	if board.ID != "1234" {
-		t.Errorf("Expected %q, got %q\n", "1234", board.ID)
+		board, err := client.Board(c.ID)
+		if err != nil {
+			t.Error(err)
+		}
+
+		if board.Name != c.Name {
+			t.Errorf("Expected %q, got %q\n", c.Name, board.Name)
+		}
+		if board.ID != "1234" {
+			t.Errorf("Expected %q, got %q\n", c.ID, board.ID)
+		}
 	}
 }
 
