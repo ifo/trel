@@ -103,3 +103,47 @@ func TestClient_List(t *testing.T) {
 	}
 	// Not checking list.Board because it is only set when a list is obtained from a board.
 }
+
+func TestClient_Checklist(t *testing.T) {
+	client, mux, server := setupClientMuxServer()
+	defer server.Close()
+
+	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		fmt.Fprint(w, `{"id": "1234", "name": "Test", "idBoard": "2345", "idCard": "3456", "checkItems": [
+			{"idChecklist": "1234", "state": "incomplete", "id": "4567", "name": "Test CheckItem"}
+		]}`)
+	})
+
+	checklist, err := client.Checklist("1234")
+	if err != nil {
+		t.Error(err)
+	}
+
+	if checklist.Name != "Test" {
+		t.Errorf("Expected %q, got %q\n", "Test", checklist.Name)
+	}
+	if checklist.ID != "1234" {
+		t.Errorf("Expected %q, got %q\n", "1234", checklist.ID)
+	}
+	if checklist.IDBoard != "2345" {
+		t.Errorf("Expected %q, got %q\n", "2345", checklist.IDBoard)
+	}
+	if checklist.IDCard != "3456" {
+		t.Errorf("Expected %q, got %q\n", "3456", checklist.IDCard)
+	}
+	// Not checking checklist.Card or checklist.Board because
+	// they are only set when a checklist is obtained from a board.
+	checkItem := checklist.CheckItems[0]
+	if checkItem.Name != "Test CheckItem" {
+		t.Errorf("Expected %q, got %q\n", "Test CheckItem", checkItem.Name)
+	}
+	if checkItem.ID != "4567" {
+		t.Errorf("Expected %q, got %q\n", "4567", checkItem.ID)
+	}
+	if checkItem.IDChecklist != "1234" {
+		t.Errorf("Expected %q, got %q\n", "1234", checkItem.IDChecklist)
+	}
+	if checkItem.State != "incomplete" {
+		t.Errorf("Expected %q, got %q\n", "incomplete", checkItem.State)
+	}
+}
