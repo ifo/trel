@@ -26,7 +26,7 @@ func TestClient_Boards(t *testing.T) {
 
 	boards, err := client.Boards("Username")
 	if err != nil {
-		t.Error(err)
+		t.Fatal(err)
 	}
 
 	if len(boards) != 1 {
@@ -64,7 +64,7 @@ func TestClient_Board(t *testing.T) {
 
 		board, err := client.Board(c.ID)
 		if err != nil {
-			t.Error(err)
+			t.Fatal(err)
 		}
 
 		if board.Name != c.Name {
@@ -86,7 +86,7 @@ func TestClient_List(t *testing.T) {
 
 	list, err := client.List("1234")
 	if err != nil {
-		t.Error(err)
+		t.Fatal(err)
 	}
 
 	if list.Name != "Test" {
@@ -116,7 +116,7 @@ func TestClient_Checklist(t *testing.T) {
 
 	checklist, err := client.Checklist("1234")
 	if err != nil {
-		t.Error(err)
+		t.Fatal(err)
 	}
 
 	if checklist.Name != "Test" {
