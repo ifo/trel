@@ -143,3 +143,38 @@ func TestClient_Checklist(t *testing.T) {
 		t.Errorf("Expected %v\n\nGot %v\n", compare, checklist)
 	}
 }
+
+func TestClient_NewWebhook(t *testing.T) {
+	client, mux, server := setupClientMuxServer()
+	defer server.Close()
+
+	cases := []struct {
+		Webhook Webhook
+		Body    string
+	}{
+		{Webhook: Webhook{ID: "1234", Description: "Card", IDModel: "5678",
+			CallbackURL: "example.com/card/5678", Active: true, client: client},
+			Body: `{"id": "1234", "description": "Card", "idModel": "5678", "callbackURL": "example.com/card/5678", "active": true}`},
+		{Webhook: Webhook{ID: "2345", Description: "List", IDModel: "6789",
+			CallbackURL: "example.com/list/6789", Active: true, client: client},
+			Body: `{"id": "2345", "description": "List", "idModel": "6789", "callbackURL": "example.com/list/6789", "active": true}`},
+	}
+
+	body := ""
+	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		fmt.Fprint(w, body)
+	})
+
+	for _, c := range cases {
+		body = c.Body
+
+		webhook, err := client.Webhook(c.Webhook.ID)
+		if err != nil {
+			t.Error(err)
+		}
+
+		if !reflect.DeepEqual(c.Webhook, webhook) {
+			t.Errorf("Expected %#v, got %#v\n", c.Webhook, webhook)
+		}
+	}
+}
