@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"net/url"
+	"reflect"
 	"testing"
 )
 
@@ -119,31 +120,29 @@ func TestClient_Checklist(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if checklist.Name != "Test" {
-		t.Errorf("Expected %q, got %q\n", "Test", checklist.Name)
+	compare := Checklist{
+		ID:      "1234",
+		Name:    "Test",
+		IDBoard: "2345",
+		IDCard:  "3456",
+		Card:    Card{},
+		Board:   Board{},
+		CheckItems: CheckItems{{
+			ID:          "4567",
+			Name:        "Test CheckItem",
+			IDChecklist: "1234",
+			State:       "incomplete",
+			client:      client,
+			//Checklist: set this later,
+		}},
+		client: client,
 	}
-	if checklist.ID != "1234" {
-		t.Errorf("Expected %q, got %q\n", "1234", checklist.ID)
+	// Properly set CheckItem Checklist
+	for i := range compare.CheckItems {
+		compare.CheckItems[i].Checklist = compare
 	}
-	if checklist.IDBoard != "2345" {
-		t.Errorf("Expected %q, got %q\n", "2345", checklist.IDBoard)
-	}
-	if checklist.IDCard != "3456" {
-		t.Errorf("Expected %q, got %q\n", "3456", checklist.IDCard)
-	}
-	// Not checking checklist.Card or checklist.Board because
-	// they are only set when a checklist is obtained from a board.
-	checkItem := checklist.CheckItems[0]
-	if checkItem.Name != "Test CheckItem" {
-		t.Errorf("Expected %q, got %q\n", "Test CheckItem", checkItem.Name)
-	}
-	if checkItem.ID != "4567" {
-		t.Errorf("Expected %q, got %q\n", "4567", checkItem.ID)
-	}
-	if checkItem.IDChecklist != "1234" {
-		t.Errorf("Expected %q, got %q\n", "1234", checkItem.IDChecklist)
-	}
-	if checkItem.State != "incomplete" {
-		t.Errorf("Expected %q, got %q\n", "incomplete", checkItem.State)
+
+	if !reflect.DeepEqual(compare, checklist) {
+		t.Errorf("Expected %v\n\nGot %v\n", compare, checklist)
 	}
 }
