@@ -168,7 +168,7 @@ func TestClient_NewWebhook(t *testing.T) {
 	for _, c := range cases {
 		body = c.Body
 
-		webhook, err := client.Webhook(c.Webhook.ID)
+		webhook, err := client.NewWebhook(c.Webhook.Description, c.Webhook.CallbackURL, c.Webhook.IDModel)
 		if err != nil {
 			t.Error(err)
 		}
