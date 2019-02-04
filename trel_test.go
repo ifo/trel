@@ -30,15 +30,14 @@ func TestClient_Boards(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if len(boards) != 1 {
-		t.Errorf("Expected 1 Board, got %d boards\n", len(boards))
-	}
+	compare := Boards{{
+		ID:     "1234",
+		Name:   "Test",
+		client: client,
+	}}
 
-	if boards[0].Name != "Test" {
-		t.Errorf("Expected %q, got %q\n", "Test", boards[0].Name)
-	}
-	if boards[0].ID != "1234" {
-		t.Errorf("Expected %q, got %q\n", "1234", boards[0].ID)
+	if !reflect.DeepEqual(compare, boards) {
+		t.Errorf("Expected %#v, got %#v\n", compare, boards)
 	}
 }
 
@@ -47,12 +46,13 @@ func TestClient_Board(t *testing.T) {
 	defer server.Close()
 
 	cases := []struct {
-		Name string
-		ID   string
-		Body string
+		Board Board
+		Body  string
 	}{
-		{Name: "Test", ID: "1234", Body: `{"name": "Test", "id": "1234"}`},
-		{Name: "Board", ID: "1234", Body: `{"name": "Board", "id": "1234"}`},
+		{Board: Board{Name: "Test", ID: "1234", client: client},
+			Body: `{"name": "Test", "id": "1234"}`},
+		{Board: Board{Name: "Board", ID: "5678", client: client},
+			Body: `{"name": "Board", "id": "5678"}`},
 	}
 
 	body := ""
@@ -63,16 +63,13 @@ func TestClient_Board(t *testing.T) {
 	for _, c := range cases {
 		body = c.Body
 
-		board, err := client.Board(c.ID)
+		board, err := client.Board(c.Board.ID)
 		if err != nil {
 			t.Fatal(err)
 		}
 
-		if board.Name != c.Name {
-			t.Errorf("Expected %q, got %q\n", c.Name, board.Name)
-		}
-		if board.ID != "1234" {
-			t.Errorf("Expected %q, got %q\n", c.ID, board.ID)
+		if !reflect.DeepEqual(c.Board, board) {
+			t.Errorf("Expected %#v, got %#v\n", c.Board, board)
 		}
 	}
 }
@@ -137,7 +134,7 @@ func TestClient_Checklist(t *testing.T) {
 		}},
 		client: client,
 	}
-	// Properly set CheckItem Checklist
+	// Properly set CheckItem's Checklist
 	for i := range compare.CheckItems {
 		compare.CheckItems[i].Checklist = compare
 	}
