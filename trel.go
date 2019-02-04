@@ -480,3 +480,35 @@ func joinPath(host, path string) string {
 	}
 	return host + path
 }
+
+func (cl Checklist) String() string {
+	return fmt.Sprintf("Checklist -\nID: %q,\nName: %q,\nIDBoard: %q,\nIDCard: %q,\nBoard: %v,\nCard: %v,\nclient: %v,\nCheckItems:\n%s",
+		cl.ID,
+		cl.Name,
+		cl.IDBoard,
+		cl.IDCard,
+		cl.Board,
+		cl.Card,
+		cl.client,
+		cl.CheckItems.String(),
+	)
+}
+
+func (ci CheckItem) String() string {
+	return fmt.Sprintf("CheckItem - ID: %q, Name: %q, State: %q, IDChecklist: %q, Checklist: %q, client: %v",
+		ci.ID,
+		ci.Name,
+		ci.State,
+		ci.IDChecklist,
+		ci.Checklist.Name,
+		ci.client,
+	)
+}
+
+func (cis CheckItems) String() string {
+	out := ""
+	for _, ci := range cis {
+		out += ci.String() + "\n"
+	}
+	return out
+}
