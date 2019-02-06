@@ -214,6 +214,7 @@ func (b Board) NewList(name, position string) (List, error) {
 		return List{}, err
 	}
 	out.client = c
+	out.Board = b
 	return out, nil
 }
 

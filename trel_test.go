@@ -293,3 +293,37 @@ func TestBoard_Lists(t *testing.T) {
 		}
 	}
 }
+
+func TestBoard_NewList(t *testing.T) {
+	client, mux, server := setupClientMuxServer()
+	defer server.Close()
+
+	board := Board{ID: "1234", client: client}
+	cases := []struct {
+		List List
+		Body string
+	}{
+		{List: List{ID: "2345", Name: "List 1", Closed: false, IDBoard: "1234", Board: board, client: client},
+			Body: `{"id": "2345", "name": "List 1", "idBoard": "1234", "closed": false}`},
+		{List: List{ID: "3456", Name: "List 2", Closed: false, IDBoard: "1234", Board: board, client: client},
+			Body: `{"id": "3456", "name": "List 2", "idBoard": "1234", "closed": false}`},
+	}
+
+	body := ""
+	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		fmt.Fprint(w, body)
+	})
+
+	for _, c := range cases {
+		body = c.Body
+
+		list, err := board.NewList(c.List.Name, "")
+		if err != nil {
+			t.Error(err)
+		}
+
+		if !reflect.DeepEqual(c.List, list) {
+			t.Errorf("Expected %#v, got %#v\n", c.List, list)
+		}
+	}
+}
