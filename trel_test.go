@@ -250,3 +250,46 @@ func TestClient_Webhook(t *testing.T) {
 		}
 	}
 }
+
+func TestBoard_Lists(t *testing.T) {
+	client, mux, server := setupClientMuxServer()
+	defer server.Close()
+
+	compareBoard := Board{ID: "1234", client: client}
+	cases := []struct {
+		Lists Lists
+		Body  string
+	}{
+		{Lists: Lists{
+			{ID: "2345", Name: "List 1", Closed: false, IDBoard: "1234", Board: compareBoard, client: client},
+			{ID: "3456", Name: "List 2", Closed: false, IDBoard: "1234", Board: compareBoard, client: client},
+		}, Body: `[
+				{"id": "2345", "name": "List 1", "idBoard": "1234", "closed": false},
+				{"id": "3456", "name": "List 2", "idBoard": "1234", "closed": false}
+			]`,
+		},
+	}
+
+	body := ""
+	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		fmt.Fprint(w, body)
+	})
+
+	for _, c := range cases {
+		body = c.Body
+
+		board := Board{ID: "1234", client: client}
+		lists, err := board.Lists()
+		if err != nil {
+			t.Error(err)
+		}
+
+		if !reflect.DeepEqual(compareBoard, board) {
+			t.Errorf("Expected %#v, got %#v\n", compareBoard, board)
+		}
+
+		if !reflect.DeepEqual(c.Lists, lists) {
+			t.Errorf("Expected %#v, got %#v\n", c.Lists, lists)
+		}
+	}
+}
