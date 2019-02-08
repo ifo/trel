@@ -334,13 +334,23 @@ func TestBoard_FindList(t *testing.T) {
 
 	board := Board{ID: "1234", client: client}
 	cases := []struct {
-		List List
-		Body string
+		ListName string
+		List     List
+		Body     string
+		Err      error
 	}{
-		{List: List{ID: "2345", Name: "List 1", Closed: false, IDBoard: "1234", Board: board, client: client},
-			Body: `[{"id": "2345", "name": "List 1", "idBoard": "1234", "closed": false}]`},
-		{List: List{ID: "3456", Name: "List 2", Closed: false, IDBoard: "1234", Board: board, client: client},
-			Body: `[{"id": "3456", "name": "List 2", "idBoard": "1234", "closed": false}]`},
+		{ListName: "List 1",
+			List: List{ID: "2345", Name: "List 1", Closed: false, IDBoard: "1234", Board: board, client: client},
+			Body: `[{"id": "2345", "name": "List 1", "idBoard": "1234", "closed": false}, {"id": "3456", "name": "List 2", "idBoard": "1234", "closed": false}]`,
+			Err:  nil},
+		{ListName: "List 2",
+			List: List{ID: "3456", Name: "List 2", Closed: false, IDBoard: "1234", Board: board, client: client},
+			Body: `[{"id": "2345", "name": "List 1", "idBoard": "1234", "closed": false}, {"id": "3456", "name": "List 2", "idBoard": "1234", "closed": false}]`,
+			Err:  nil},
+		{ListName: "List 1",
+			List: List{},
+			Body: `[{"id": "3456", "name": "List 2", "idBoard": "1234", "closed": false}]`,
+			Err:  NotFoundError{Type: "List", Identifier: "List 1"}},
 	}
 
 	body := ""
@@ -351,9 +361,9 @@ func TestBoard_FindList(t *testing.T) {
 	for _, c := range cases {
 		body = c.Body
 
-		list, err := board.FindList(c.List.Name)
-		if err != nil {
-			t.Error(err)
+		list, err := board.FindList(c.ListName)
+		if c.Err != err {
+			t.Errorf("Expected %q, got %q\n", c.Err, err)
 		}
 
 		if !reflect.DeepEqual(c.List, list) {
