@@ -79,27 +79,19 @@ func TestClient_List(t *testing.T) {
 	defer server.Close()
 
 	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		fmt.Fprint(w, `{"id": "1234", "name": "Test", "closed": false, "idBoard": "5678"}`)
+		fmt.Fprint(w, `{"id": "1234", "name": "Test", "idBoard": "5678"}`)
 	})
+
+	compareList := List{ID: "1234", Name: "Test", IDBoard: "5678", client: client}
 
 	list, err := client.List("1234")
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	if list.Name != "Test" {
-		t.Errorf("Expected %q, got %q\n", "Test", list.Name)
+	if !reflect.DeepEqual(compareList, list) {
+		t.Errorf("Expected %#v, got %#v\n", compareList, list)
 	}
-	if list.ID != "1234" {
-		t.Errorf("Expected %q, got %q\n", "1234", list.ID)
-	}
-	if list.IDBoard != "5678" {
-		t.Errorf("Expected %q, got %q\n", "5678", list.IDBoard)
-	}
-	if list.Closed != false {
-		t.Errorf("Expected %t, got %t\n", false, list.Closed)
-	}
-	// Not checking list.Board because it is only set when a list is obtained from a board.
 }
 
 func TestClient_Checklist(t *testing.T) {
@@ -140,7 +132,7 @@ func TestClient_Checklist(t *testing.T) {
 	}
 
 	if !reflect.DeepEqual(compare, checklist) {
-		t.Errorf("Expected %v\n\nGot %v\n", compare, checklist)
+		t.Errorf("Expected %v, got %v\n", compare, checklist)
 	}
 }
 
@@ -263,10 +255,7 @@ func TestBoard_Lists(t *testing.T) {
 		{Lists: Lists{
 			{ID: "2345", Name: "List 1", Closed: false, IDBoard: "1234", Board: compareBoard, client: client},
 			{ID: "3456", Name: "List 2", Closed: false, IDBoard: "1234", Board: compareBoard, client: client},
-		}, Body: `[
-				{"id": "2345", "name": "List 1", "idBoard": "1234", "closed": false},
-				{"id": "3456", "name": "List 2", "idBoard": "1234", "closed": false}
-			]`,
+		}, Body: `[{"id": "2345", "name": "List 1", "idBoard": "1234"}, {"id": "3456", "name": "List 2", "idBoard": "1234"}]`,
 		},
 	}
 
@@ -304,9 +293,9 @@ func TestBoard_NewList(t *testing.T) {
 		Body string
 	}{
 		{List: List{ID: "2345", Name: "List 1", Closed: false, IDBoard: "1234", Board: board, client: client},
-			Body: `{"id": "2345", "name": "List 1", "idBoard": "1234", "closed": false}`},
+			Body: `{"id": "2345", "name": "List 1", "idBoard": "1234"}`},
 		{List: List{ID: "3456", Name: "List 2", Closed: false, IDBoard: "1234", Board: board, client: client},
-			Body: `{"id": "3456", "name": "List 2", "idBoard": "1234", "closed": false}`},
+			Body: `{"id": "3456", "name": "List 2", "idBoard": "1234"}`},
 	}
 
 	body := ""
@@ -341,15 +330,15 @@ func TestBoard_FindList(t *testing.T) {
 	}{
 		{ListName: "List 1",
 			List: List{ID: "2345", Name: "List 1", Closed: false, IDBoard: "1234", Board: board, client: client},
-			Body: `[{"id": "2345", "name": "List 1", "idBoard": "1234", "closed": false}, {"id": "3456", "name": "List 2", "idBoard": "1234", "closed": false}]`,
+			Body: `[{"id": "2345", "name": "List 1", "idBoard": "1234"}, {"id": "3456", "name": "List 2", "idBoard": "1234"}]`,
 			Err:  nil},
 		{ListName: "List 2",
 			List: List{ID: "3456", Name: "List 2", Closed: false, IDBoard: "1234", Board: board, client: client},
-			Body: `[{"id": "2345", "name": "List 1", "idBoard": "1234", "closed": false}, {"id": "3456", "name": "List 2", "idBoard": "1234", "closed": false}]`,
+			Body: `[{"id": "2345", "name": "List 1", "idBoard": "1234"}, {"id": "3456", "name": "List 2", "idBoard": "1234"}]`,
 			Err:  nil},
 		{ListName: "List 1",
 			List: List{},
-			Body: `[{"id": "3456", "name": "List 2", "idBoard": "1234", "closed": false}]`,
+			Body: `[{"id": "3456", "name": "List 2", "idBoard": "1234"}]`,
 			Err:  NotFoundError{Type: "List", Identifier: "List 1"}},
 	}
 
