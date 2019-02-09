@@ -394,3 +394,48 @@ func TestList_Cards(t *testing.T) {
 		}
 	}
 }
+
+func TestList_FindCard(t *testing.T) {
+	client, mux, server := setupClientMuxServer()
+	defer server.Close()
+
+	list := List{ID: "1234", client: client}
+	cases := []struct {
+		CardName string
+		Card     Card
+		Body     string
+		Err      error
+	}{
+		{CardName: "Card 1",
+			Card: Card{ID: "2345", Name: "Card 1", IDList: "1234", List: list, client: client},
+			Body: `[{"id": "2345", "name": "Card 1", "idList": "1234"}, {"id": "3456", "name": "Card 2", "idList": "1234"}]`,
+			Err:  nil},
+		{CardName: "Card 2",
+			Card: Card{ID: "3456", Name: "Card 2", IDList: "1234", List: list, client: client},
+			Body: `[{"id": "2345", "name": "Card 1", "idList": "1234"}, {"id": "3456", "name": "Card 2", "idList": "1234"}]`,
+			Err:  nil},
+		{CardName: "Card 1",
+			Card: Card{},
+			Body: `[{"id": "3456", "name": "Card 2", "idList": "1234"}]`,
+			Err:  NotFoundError{Type: "Card", Identifier: "Card 1"}},
+	}
+
+	body := ""
+	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		fmt.Fprint(w, body)
+	})
+
+	for _, c := range cases {
+		body = c.Body
+
+		card, err := list.FindCard(c.CardName)
+		if c.Err != err {
+			t.Errorf("Expected %q, got %q\n", c.Err, err)
+		}
+
+		if !reflect.DeepEqual(c.Card, card) {
+			t.Errorf("Expected %#v, got %#v\n", c.Card, card)
+		}
+	}
+
+}
