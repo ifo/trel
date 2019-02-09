@@ -371,3 +371,37 @@ func TestBoard_FindList(t *testing.T) {
 		}
 	}
 }
+
+func TestList_Cards(t *testing.T) {
+	client, mux, server := setupClientMuxServer()
+	defer server.Close()
+
+	list := List{ID: "1234", client: client}
+	cases := []struct {
+		Cards Cards
+		Body  string
+	}{
+		{Cards: Cards{
+			{ID: "2345", Name: "Card 1", IDList: "1234", List: list, client: client},
+			{ID: "3456", Name: "Card 2", IDList: "1234", List: list, client: client}},
+			Body: `[{"id": "2345", "name": "Card 1", "idList": "1234"}, {"id": "3456", "name": "Card 2", "idList": "1234"}]`},
+	}
+
+	body := ""
+	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		fmt.Fprint(w, body)
+	})
+
+	for _, c := range cases {
+		body = c.Body
+
+		cards, err := list.Cards()
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		if !reflect.DeepEqual(c.Cards, cards) {
+			t.Errorf("Expected %#v, got %#v\n", c.Cards, cards)
+		}
+	}
+}
