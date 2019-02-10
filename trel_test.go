@@ -437,5 +437,41 @@ func TestList_FindCard(t *testing.T) {
 			t.Errorf("Expected %#v, got %#v\n", c.Card, card)
 		}
 	}
+}
 
+func TestList_NewCard(t *testing.T) {
+	client, mux, server := setupClientMuxServer()
+	defer server.Close()
+
+	board := Board{ID: "4321"}
+	list := List{ID: "1234", Board: board, client: client}
+	cases := []struct {
+		Card Card
+		Body string
+	}{
+		{Card: Card{ID: "2345", Name: "Card 1", Description: "first card",
+			IDList: list.ID, List: list, IDBoard: board.ID, Board: board, client: client},
+			Body: `{"id": "2345", "name": "Card 1", "desc": "first card", "idList": "1234", "idBoard": "4321"}`},
+		{Card: Card{ID: "3456", Name: "Card 2", Description: "second card",
+			IDList: list.ID, List: list, IDBoard: board.ID, Board: board, client: client},
+			Body: `{"id": "3456", "name": "Card 2", "desc": "second card", "idList": "1234", "idBoard": "4321"}`},
+	}
+
+	body := ""
+	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		fmt.Fprint(w, body)
+	})
+
+	for _, c := range cases {
+		body = c.Body
+
+		card, err := list.NewCard(c.Card.Name, c.Card.Description, "")
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		if !reflect.DeepEqual(c.Card, card) {
+			t.Errorf("Expected %#v, got %#v\n", c.Card, card)
+		}
+	}
 }
