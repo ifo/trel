@@ -475,3 +475,47 @@ func TestList_NewCard(t *testing.T) {
 		}
 	}
 }
+
+func TestLists_Find(t *testing.T) {
+	list1 := List{ID: "2345", Name: "List 1"}
+	list2 := List{ID: "3456", Name: "List 2"}
+	list3 := List{ID: "4567", Name: "List 3"}
+	cases := []struct {
+		ListName  string
+		FoundList *List
+		Lists     Lists
+		Err       error
+	}{
+		{ListName: list1.Name,
+			FoundList: &list1,
+			Lists:     Lists{list1, list2, list3},
+			Err:       nil},
+		{ListName: list2.Name,
+			FoundList: &list2,
+			Lists:     Lists{list1, list2, list3},
+			Err:       nil},
+		{ListName: list3.Name,
+			FoundList: &list3,
+			Lists:     Lists{list1, list2, list3},
+			Err:       nil},
+		{ListName: list1.Name,
+			FoundList: &List{},
+			Lists:     Lists{},
+			Err:       NotFoundError{Type: "List", Identifier: list1.Name}},
+		{ListName: list2.Name,
+			FoundList: &List{},
+			Lists:     Lists{list1, list3},
+			Err:       NotFoundError{Type: "List", Identifier: list2.Name}},
+	}
+
+	for _, c := range cases {
+		list, err := c.Lists.Find(c.ListName)
+		if c.Err != err {
+			t.Errorf("Expected %q, got %q\n", c.Err, err)
+		}
+
+		if !reflect.DeepEqual(c.FoundList, list) {
+			t.Errorf("Expected %#v, got %#v\n", c.FoundList, list)
+		}
+	}
+}
