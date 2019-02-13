@@ -519,3 +519,41 @@ func TestLists_Find(t *testing.T) {
 		}
 	}
 }
+
+func TestCard_Move(t *testing.T) {
+	client, mux, server := setupClientMuxServer()
+	defer server.Close()
+
+	list1 := List{ID: "2345"}
+	list2 := List{ID: "3456"}
+	cases := []struct {
+		ListID  string
+		Card    Card
+		EndCard Card
+		Err     error
+	}{
+		{ListID: list2.ID,
+			Card:    Card{IDList: list1.ID, List: list1, client: client},
+			EndCard: Card{IDList: list2.ID, List: list2, client: client},
+			Err:     nil},
+		{ListID: list1.ID,
+			Card:    Card{IDList: list2.ID, List: list2, client: client},
+			EndCard: Card{IDList: list1.ID, List: list1, client: client},
+			Err:     nil},
+	}
+
+	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		fmt.Fprint(w, "{}")
+	})
+
+	for _, c := range cases {
+		err := c.Card.Move(c.ListID)
+		if c.Err != err {
+			t.Errorf("Expected %q, got %q\n", c.Err, err)
+		}
+
+		if !reflect.DeepEqual(c.Card, c.EndCard) {
+			t.Errorf("Expected %#v, got %#v\n", c.Card, c.EndCard)
+		}
+	}
+}
