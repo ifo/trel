@@ -298,8 +298,8 @@ func (ca *Card) Rename(name string) error {
 	}
 
 	c := ca.client
-	name = url.QueryEscape(name)
-	apiurl := fmt.Sprintf("cards/%s?name=%s&key=%s&token=%s", ca.ID, name, c.APIKey, c.Token)
+	escapedName := url.QueryEscape(name)
+	apiurl := fmt.Sprintf("cards/%s?name=%s&key=%s&token=%s", ca.ID, escapedName, c.APIKey, c.Token)
 	if err := c.doMethod(http.MethodPut, apiurl); err != nil {
 		return err
 	}

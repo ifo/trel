@@ -557,3 +557,41 @@ func TestCard_Move(t *testing.T) {
 		}
 	}
 }
+
+func TestCard_Rename(t *testing.T) {
+	client, mux, server := setupClientMuxServer()
+	defer server.Close()
+
+	name1 := "card 1"
+	name2 := "card 2"
+	cases := []struct {
+		NewName string
+		Card    Card
+		EndCard Card
+		Err     error
+	}{
+		{NewName: name2,
+			Card:    Card{Name: name1, client: client},
+			EndCard: Card{Name: name2, client: client},
+			Err:     nil},
+		{NewName: name1,
+			Card:    Card{Name: name2, client: client},
+			EndCard: Card{Name: name1, client: client},
+			Err:     nil},
+	}
+
+	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		fmt.Fprint(w, "{}")
+	})
+
+	for _, c := range cases {
+		err := c.Card.Rename(c.NewName)
+		if c.Err != err {
+			t.Errorf("Expected %q, got %q\n", c.Err, err)
+		}
+
+		if !reflect.DeepEqual(c.Card, c.EndCard) {
+			t.Errorf("Expected %#v, got %#v\n", c.Card, c.EndCard)
+		}
+	}
+}
