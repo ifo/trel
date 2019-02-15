@@ -595,3 +595,47 @@ func TestCard_Rename(t *testing.T) {
 		}
 	}
 }
+
+func TestCard_Checklists(t *testing.T) {
+	client, mux, server := setupClientMuxServer()
+	defer server.Close()
+
+	card := Card{client: client}
+	cases := []struct {
+		Checklists Checklists
+		Body       string
+	}{
+		{Checklists: Checklists{{ID: "1234", Name: "Checklist 1", Card: card, client: client, CheckItems: nil}},
+			Body: `[{"id": "1234", "name": "Checklist 1"}]`},
+		{Checklists: Checklists{{ID: "1234", Name: "Checklist 1", Card: card, client: client, CheckItems: CheckItems{
+			{ID: "2345", Name: "CheckItem 1", State: "incomplete", IDChecklist: "1234", client: client}}}},
+			Body: `[{"id": "1234", "name": "Checklist 1", "checkItems": [
+				{"idChecklist": "1234", "state": "incomplete", "id": "2345", "name": "CheckItem 1"}]}]`},
+	}
+	// Properly set the Checklist on each CheckItem.
+	for _, c := range cases {
+		for _, checklist := range c.Checklists {
+			for i := range checklist.CheckItems {
+				checklist.CheckItems[i].Checklist = checklist
+			}
+		}
+	}
+
+	body := ""
+	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		fmt.Fprint(w, body)
+	})
+
+	for _, c := range cases {
+		body = c.Body
+
+		checklists, err := card.Checklists()
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		if !reflect.DeepEqual(c.Checklists, checklists) {
+			t.Errorf("Expected %v, got %v\n", c.Checklists, checklists)
+		}
+	}
+}
