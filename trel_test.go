@@ -639,3 +639,47 @@ func TestCard_Checklists(t *testing.T) {
 		}
 	}
 }
+
+func TestCards_Find(t *testing.T) {
+	card1 := Card{ID: "2345", Name: "Card 1"}
+	card2 := Card{ID: "3456", Name: "Card 2"}
+	card3 := Card{ID: "4567", Name: "Card 3"}
+	cases := []struct {
+		CardName  string
+		FoundCard *Card
+		Cards     Cards
+		Err       error
+	}{
+		{CardName: card1.Name,
+			FoundCard: &card1,
+			Cards:     Cards{card1, card2, card3},
+			Err:       nil},
+		{CardName: card2.Name,
+			FoundCard: &card2,
+			Cards:     Cards{card1, card2, card3},
+			Err:       nil},
+		{CardName: card3.Name,
+			FoundCard: &card3,
+			Cards:     Cards{card1, card2, card3},
+			Err:       nil},
+		{CardName: card1.Name,
+			FoundCard: &Card{},
+			Cards:     Cards{},
+			Err:       NotFoundError{Type: "Card", Identifier: card1.Name}},
+		{CardName: card2.Name,
+			FoundCard: &Card{},
+			Cards:     Cards{card1, card3},
+			Err:       NotFoundError{Type: "Card", Identifier: card2.Name}},
+	}
+
+	for _, c := range cases {
+		card, err := c.Cards.Find(c.CardName)
+		if c.Err != err {
+			t.Errorf("Expected %q, got %q\n", c.Err, err)
+		}
+
+		if !reflect.DeepEqual(c.FoundCard, card) {
+			t.Errorf("Expected %#v, got %#v\n", c.FoundCard, card)
+		}
+	}
+}
