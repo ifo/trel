@@ -365,6 +365,17 @@ func (cis CheckItems) Find(name string) (*CheckItem, error) {
 	return &CheckItem{}, NotFoundError{Type: "CheckItem", Identifier: name}
 }
 
+func (ci *CheckItem) Rename(name string) error {
+	c := ci.client
+	escapedName := url.QueryEscape(name)
+	apiurl := fmt.Sprintf("cards/%s/checkItem/%s?name=%s&key=%s&token=%s", ci.Checklist.IDCard, ci.ID, escapedName, c.APIKey, c.Token)
+	if err := c.doMethod(http.MethodPut, apiurl); err != nil {
+		return err
+	}
+	ci.Name = name
+	return nil
+}
+
 func (w *Webhook) Activate() error {
 	// Don't activate active webhooks.
 	if w.Active {
