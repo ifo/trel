@@ -713,3 +713,33 @@ func TestCheckItem_Complete(t *testing.T) {
 		}
 	}
 }
+
+func TestCheckItem_Incomplete(t *testing.T) {
+	client, mux, server := setupClientMuxServer()
+	defer server.Close()
+
+	cases := []struct {
+		CheckItem    CheckItem
+		EndCheckItem CheckItem
+	}{
+		{CheckItem: CheckItem{State: "complete", client: client},
+			EndCheckItem: CheckItem{State: "incomplete", client: client}},
+		{CheckItem: CheckItem{State: "incomplete", client: client},
+			EndCheckItem: CheckItem{State: "incomplete", client: client}},
+	}
+
+	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		fmt.Fprint(w, "{}")
+	})
+
+	for _, c := range cases {
+		err := c.CheckItem.Incomplete()
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		if !reflect.DeepEqual(c.CheckItem, c.EndCheckItem) {
+			t.Errorf("Expected %#v, got %#v\n", c.CheckItem, c.EndCheckItem)
+		}
+	}
+}
