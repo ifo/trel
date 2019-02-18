@@ -743,3 +743,47 @@ func TestCheckItem_Incomplete(t *testing.T) {
 		}
 	}
 }
+
+func TestCheckItems_Find(t *testing.T) {
+	checkitem1 := CheckItem{ID: "2345", Name: "CheckItem 1"}
+	checkitem2 := CheckItem{ID: "3456", Name: "CheckItem 2"}
+	checkitem3 := CheckItem{ID: "4567", Name: "CheckItem 3"}
+	cases := []struct {
+		CheckItemName  string
+		FoundCheckItem *CheckItem
+		CheckItems     CheckItems
+		Err            error
+	}{
+		{CheckItemName: checkitem1.Name,
+			FoundCheckItem: &checkitem1,
+			CheckItems:     CheckItems{checkitem1, checkitem2, checkitem3},
+			Err:            nil},
+		{CheckItemName: checkitem2.Name,
+			FoundCheckItem: &checkitem2,
+			CheckItems:     CheckItems{checkitem1, checkitem2, checkitem3},
+			Err:            nil},
+		{CheckItemName: checkitem3.Name,
+			FoundCheckItem: &checkitem3,
+			CheckItems:     CheckItems{checkitem1, checkitem2, checkitem3},
+			Err:            nil},
+		{CheckItemName: checkitem1.Name,
+			FoundCheckItem: &CheckItem{},
+			CheckItems:     CheckItems{},
+			Err:            NotFoundError{Type: "CheckItem", Identifier: checkitem1.Name}},
+		{CheckItemName: checkitem2.Name,
+			FoundCheckItem: &CheckItem{},
+			CheckItems:     CheckItems{checkitem1, checkitem3},
+			Err:            NotFoundError{Type: "CheckItem", Identifier: checkitem2.Name}},
+	}
+
+	for _, c := range cases {
+		checkitem, err := c.CheckItems.Find(c.CheckItemName)
+		if c.Err != err {
+			t.Errorf("Expected %q, got %q\n", c.Err, err)
+		}
+
+		if !reflect.DeepEqual(c.FoundCheckItem, checkitem) {
+			t.Errorf("Expected %#v, got %#v\n", c.FoundCheckItem, checkitem)
+		}
+	}
+}
