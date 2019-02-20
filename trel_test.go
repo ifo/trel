@@ -787,3 +787,41 @@ func TestCheckItems_Find(t *testing.T) {
 		}
 	}
 }
+
+func TestCheckItem_Rename(t *testing.T) {
+	client, mux, server := setupClientMuxServer()
+	defer server.Close()
+
+	name1 := "checkitem 1"
+	name2 := "checkitem 2"
+	cases := []struct {
+		NewName      string
+		CheckItem    CheckItem
+		EndCheckItem CheckItem
+		Err          error
+	}{
+		{NewName: name2,
+			CheckItem:    CheckItem{Name: name1, client: client},
+			EndCheckItem: CheckItem{Name: name2, client: client},
+			Err:          nil},
+		{NewName: name1,
+			CheckItem:    CheckItem{Name: name2, client: client},
+			EndCheckItem: CheckItem{Name: name1, client: client},
+			Err:          nil},
+	}
+
+	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		fmt.Fprint(w, "{}")
+	})
+
+	for _, c := range cases {
+		err := c.CheckItem.Rename(c.NewName)
+		if c.Err != err {
+			t.Errorf("Expected %q, got %q\n", c.Err, err)
+		}
+
+		if !reflect.DeepEqual(c.CheckItem, c.EndCheckItem) {
+			t.Errorf("Expected %#v, got %#v\n", c.CheckItem, c.EndCheckItem)
+		}
+	}
+}
