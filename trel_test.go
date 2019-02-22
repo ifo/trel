@@ -855,3 +855,33 @@ func TestWebhook_Activate(t *testing.T) {
 		}
 	}
 }
+
+func TestWebhook_Deactivate(t *testing.T) {
+	client, mux, server := setupClientMuxServer()
+	defer server.Close()
+
+	cases := []struct {
+		Webhook    Webhook
+		EndWebhook Webhook
+	}{
+		{Webhook: Webhook{Active: true, client: client},
+			EndWebhook: Webhook{Active: false, client: client}},
+		{Webhook: Webhook{Active: false, client: client},
+			EndWebhook: Webhook{Active: false, client: client}},
+	}
+
+	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		fmt.Fprint(w, "{}")
+	})
+
+	for _, c := range cases {
+		err := c.Webhook.Deactivate()
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		if !reflect.DeepEqual(c.Webhook, c.EndWebhook) {
+			t.Errorf("Expected %#v, got %#v\n", c.Webhook, c.EndWebhook)
+		}
+	}
+}
