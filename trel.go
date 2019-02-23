@@ -412,7 +412,7 @@ func (w *Webhook) Delete() error {
 	if err := c.doMethod(http.MethodDelete, apiurl); err != nil {
 		return err
 	}
-	w = &Webhook{}
+	*w = Webhook{}
 	return nil
 }
 
