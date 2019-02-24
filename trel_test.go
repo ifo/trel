@@ -915,3 +915,36 @@ func TestWebhook_Delete(t *testing.T) {
 		}
 	}
 }
+
+func TestWebhooks_Find(t *testing.T) {
+	cases := []struct {
+		IDModel      string
+		FoundWebhook *Webhook
+		Webhooks     Webhooks
+		Err          error
+	}{
+		{IDModel: "1",
+			FoundWebhook: &Webhook{IDModel: "1"},
+			Webhooks:     Webhooks{{IDModel: "1"}, {IDModel: "2"}},
+			Err:          nil},
+		{IDModel: "2",
+			FoundWebhook: &Webhook{IDModel: "2"},
+			Webhooks:     Webhooks{{IDModel: "1"}, {IDModel: "2"}},
+			Err:          nil},
+		{IDModel: "3",
+			FoundWebhook: &Webhook{},
+			Webhooks:     Webhooks{{IDModel: "1"}, {IDModel: "2"}},
+			Err:          NotFoundError{Type: "Webhook", Identifier: "3"}},
+	}
+
+	for _, c := range cases {
+		webhook, err := c.Webhooks.Find(c.IDModel)
+		if c.Err != err {
+			t.Errorf("Expected %q, got %q\n", c.Err, err)
+		}
+
+		if !reflect.DeepEqual(c.FoundWebhook, webhook) {
+			t.Errorf("Expected %#v, got %#v\n", c.FoundWebhook, webhook)
+		}
+	}
+}
